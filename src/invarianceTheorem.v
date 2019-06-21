@@ -109,16 +109,8 @@ Proof.
   unfold equivalent_at_points.
   unfold bisimulation.
 
-  intro H.
-
-  destruct H as [Z H].
-  destruct H as [H HZwSw'S'].
-  destruct H as [HAtomicHarmony H].
-  destruct H as [HZig H].
-  destruct H as [HZag H].
-  destruct H as [HFZig HFZag].
-
-  intro phi.
+  intros [Z [[HAtomicHarmony [HZig [HZag [HFZig HFZag]]]] HZwSw'S']].
+  intros phi.
 
   generalize dependent Z.
   generalize dependent R'.
@@ -126,11 +118,11 @@ Proof.
   generalize dependent w'.
   generalize dependent w.
 
-  induction phi as [p | | phi IHphi psi IHpsi | phi IH | d phi IH].
+  induction phi as [p | | phi IHphi psi IHpsi | phi IH | d phi IH];
+    unfold satisfies; fold satisfies; 
+    intros w w' S S' Z HAtomicHarmony HZig HZag HFZig HFZag HZwSw'S'.
 
   + (* Atom *)
-    unfold satisfies.
-    intros w w' S S' Z HAtomicHarmony HZig HZag HFZig HFZag HZwSw'S'.
     rewrite (HAtomicHarmony w S w' S' HZwSw'S').
     tauto.
 
@@ -138,8 +130,6 @@ Proof.
     tauto.
 
   + (* If *)
-    unfold satisfies; fold satisfies.
-    intros w w' S S' Z HAtomicHarmony HZig HZag HFZig HFZag HZwSw'S'.
     split;
       intros H Hsat;
       apply (IHpsi w w' S S' Z
@@ -150,8 +140,6 @@ Proof.
       apply Hsat.
 
   + (* Modal *)
-    unfold satisfies; fold satisfies.
-    intros w w' S S' Z HAtomicHarmony HZig HZag HFZig HFZag HZwSw'S'.
     split.
     - intro H.
       destruct H as [v [HSwv Hsatv]].
@@ -178,11 +166,8 @@ Proof.
         assumption.
 
   + (* Dynamic *)
-    unfold satisfies; fold satisfies.
-    intros w w' S S' Z HAtomicHarmony HZig HZag HFZig HFZag HZwSw'S'.
     split.
-    - unfold satisfies; fold satisfies.
-      intro H.
+    - intro H.
       destruct H as [v [T [HfWwSvT HsatTv]]].
 
       apply (HFZig d w S w' S' v T HZwSw'S') in HfWwSvT
@@ -197,8 +182,7 @@ Proof.
           assumption.
 
 
-    - unfold satisfies; fold satisfies.
-      intro H.
+    - intro H.
       destruct H as [v' [T' [HfW'w'S'v'T' HsatT'v']]].
 
       apply (HFZag d w S w' S' v' T' HZwSw'S') in HfW'w'S'v'T'
