@@ -116,7 +116,7 @@ Proof.
   generalize dependent w.
 
   induction phi as [p | | phi IHphi psi IHpsi | phi IH | d phi IH];
-    unfold satisfies; fold satisfies; 
+    simpl; 
     intros w w' S S' HZwSw'S'.
 
   + (* Atom *)
@@ -136,8 +136,7 @@ Proof.
 
   + (* Modal *)
     split.
-    - intro H.
-      destruct H as [v [HSwv Hsatv]].
+    - intros [v [HSwv Hsatv]].
       unfold zig in HZig.
       apply (HZig w S w' S' v HZwSw'S') in HSwv as [v' [HZvv' HS'w'v']].
       exists v'.
@@ -145,10 +144,8 @@ Proof.
       * assumption.
       * apply (IH v v' S S' HZvv').
         assumption.
-    - intro H.
+    - intros [v' [HSw'v' Hsatv']].
       unfold zag in HZag.
-      destruct H as [v' H].
-      destruct H as [HSw'v' Hsatv'].
       apply (HZag w S w' S' v' HZwSw'S') in HSw'v' as Hexists.
       destruct Hexists as [v Hexists].
       destruct Hexists as [HZvv' HSwv].
@@ -169,8 +166,7 @@ Proof.
 
       split.
         * assumption.
-        * apply (IH v v' T T' HZvTv'T').
-          assumption.
+        * eapply IH; eassumption.
 
     - intros [v' [T' [HfW'w'S'v'T' HsatT'v']]].
 
@@ -181,8 +177,7 @@ Proof.
 
       split.
         * assumption.
-        * apply (IH v v' T T' HZvTv'T').
-          assumption.
+        * eapply IH; eassumption.
 Qed.
 
 End Properties.
