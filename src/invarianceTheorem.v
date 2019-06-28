@@ -110,7 +110,7 @@ Proof.
   intros [Z [[HAtomicHarmony [HZig [HZag [HFZig HFZag]]]] HZwSw'S']].
   intros phi.
 
-  generalize dependent Z.
+  (* generalize dependent Z. *)
   generalize dependent R'.
   generalize dependent R.
   generalize dependent w'.
@@ -118,7 +118,7 @@ Proof.
 
   induction phi as [p | | phi IHphi psi IHpsi | phi IH | d phi IH];
     unfold satisfies; fold satisfies; 
-    intros w w' S S' Z HAtomicHarmony HZig HZag HFZig HFZag HZwSw'S'.
+    intros w w' S S' HZwSw'S' (* Z HAtomicHarmony HZig HZag HFZig HFZag HZwSw'S' *).
 
   + (* Atom *)
     rewrite (HAtomicHarmony w S w' S' HZwSw'S').
@@ -130,11 +130,9 @@ Proof.
   + (* If *)
     split;
       intros H Hsat;
-      apply (IHpsi w w' S S' Z
-                   HAtomicHarmony HZig HZag HFZig HFZag HZwSw'S');
+      apply (IHpsi w w' S S' HZwSw'S');
       apply H;
-      apply (IHphi w w' S S' Z
-                   HAtomicHarmony HZig HZag HFZig HFZag HZwSw'S');
+      apply (IHphi w w' S S' HZwSw'S');
       apply Hsat.
 
   + (* Modal *)
@@ -146,8 +144,7 @@ Proof.
       exists v'.
       split.
       * assumption.
-      * apply (IH v v' S S' Z
-                  HAtomicHarmony HZig HZag HFZig HFZag HZvv').
+      * apply (IH v v' S S' HZvv').
         assumption.
     - intro H.
       unfold zag in HZag.
@@ -159,8 +156,7 @@ Proof.
       exists v.
       split.
       * assumption.
-      * apply (IH v v' S S' Z
-                  HAtomicHarmony HZig HZag HFZig HFZag HZvv').
+      * apply (IH v v' S S' HZvv').
         assumption.
 
   + (* Dynamic *)
@@ -175,10 +171,8 @@ Proof.
 
       split.
         * assumption.
-        * apply (IH v v' T T' Z HAtomicHarmony HZig
-                    HZag HFZig HFZag HZvTv'T').
+        * apply (IH v v' T T' HZvTv'T').
           assumption.
-
 
     - intro H.
       destruct H as [v' [T' [HfW'w'S'v'T' HsatT'v']]].
@@ -190,8 +184,7 @@ Proof.
 
       split.
         * assumption.
-        * apply (IH v v' T T' Z HAtomicHarmony HZig
-                    HZag HFZig HFZag HZvTv'T').
+        * apply (IH v v' T T' HZvTv'T').
           assumption.
 Qed.
 
