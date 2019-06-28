@@ -110,7 +110,6 @@ Proof.
   intros [Z [[HAtomicHarmony [HZig [HZag [HFZig HFZag]]]] HZwSw'S']].
   intros phi.
 
-  (* generalize dependent Z. *)
   generalize dependent R'.
   generalize dependent R.
   generalize dependent w'.
@@ -118,7 +117,7 @@ Proof.
 
   induction phi as [p | | phi IHphi psi IHpsi | phi IH | d phi IH];
     unfold satisfies; fold satisfies; 
-    intros w w' S S' HZwSw'S' (* Z HAtomicHarmony HZig HZag HFZig HFZag HZwSw'S' *).
+    intros w w' S S' HZwSw'S'.
 
   + (* Atom *)
     rewrite (HAtomicHarmony w S w' S' HZwSw'S').
@@ -161,8 +160,7 @@ Proof.
 
   + (* Dynamic *)
     split.
-    - intro H.
-      destruct H as [v [T [HfWwSvT HsatTv]]].
+    - intros [v [T [HfWwSvT HsatTv]]].
 
       apply (HFZig d w S w' S' v T HZwSw'S') in HfWwSvT
         as [v' [T' [HfW'w'S'v'T' HZvTv'T']]].
@@ -174,8 +172,7 @@ Proof.
         * apply (IH v v' T T' HZvTv'T').
           assumption.
 
-    - intro H.
-      destruct H as [v' [T' [HfW'w'S'v'T' HsatT'v']]].
+    - intros [v' [T' [HfW'w'S'v'T' HsatT'v']]].
 
       apply (HFZag d w S w' S' v' T' HZwSw'S') in HfW'w'S'v'T'
         as [v [T [HfWwSvT HZvTv'T']]].
