@@ -101,7 +101,7 @@ Theorem InvarianceUnderBisimulation :
     bisimulable_at_points p p' ->
     equivalent_at_points p p'.
 Proof.
-  intros (w, R) (w', R').
+  intros [w R] [w' R'].
 
   unfold bisimulable_at_points.
   unfold equivalent_at_points.
