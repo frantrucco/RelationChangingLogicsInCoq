@@ -127,7 +127,7 @@ Proof.
   generalize dependent S'. generalize dependent S.
   generalize dependent w'. generalize dependent w.
 
-  induction phi as [p | | phi IHphi psi IHpsi | d phi IH].
+  induction phi as [p | | phi IHphi psi IHpsi | d phi IH];
   simpl;                (* This tactic unfolds definitions *)
   intros w w' S S' HZwSw'S'.
   + rewrite (HAtomicHarmony w S w' S' HZwSw'S'). tauto.
