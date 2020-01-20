@@ -1,7 +1,7 @@
 # RelationChangingLogicsInCoq
 
 This repository contains the code for various on-going verification
-efforts in dynamic logics, written in the [https://coq.inria.fr](Coq)
+efforts in dynamic logics, written in the [Coq](https://coq.inria.fr)
 proof assistant.
 
 The code specific to the paper _Mechanizing Bisimulation Theorems for
