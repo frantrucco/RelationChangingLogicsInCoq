@@ -60,7 +60,7 @@ Notation "[o] d phi" := (DynBox d phi)
 (* Semantics *)
 Definition val (W: Set) : Type := W -> prop -> Prop.
 
-Structure point (W: Set) : Type := {
+Structure state_model (W: Set) : Type := {
   value: W; rel: relation W; valuation: val W
 }.
 
@@ -69,11 +69,11 @@ Arguments rel {W}.
 Arguments valuation {W}.
 
 Definition muf : Type := forall (W : Set),
-  point W -> (point W -> Prop).
+  state_model W -> (state_model W -> Prop).
 
 Variable F : Dyn -> muf.
 
-Fixpoint satisfies (W : Set) (p: point W) (phi : form) : Prop :=
+Fixpoint satisfies (W : Set) (p: state_model W) (phi : form) : Prop :=
   match phi with
   | Atom a => p.(valuation) p.(value) a
   | Bottom => False
@@ -88,11 +88,11 @@ Notation "<< W , p >> |= phi" := (satisfies W p phi) (at level 30).
 (* Semantic Definitions *)
 Variables W W' : Set.
 
-Definition equivalent_at_points p p' :=
+Definition equivalent_at_sm p p' :=
   forall (phi:form), (<<W , p>> |= phi) <-> (<<W' , p' >> |= phi).
 
 Definition model_to_model_relation : Type :=
-  point W -> point W' -> Prop.
+  state_model W -> state_model W' -> Prop.
 
 Variable Z : model_to_model_relation.
 
@@ -113,19 +113,19 @@ Definition bisimulation : Prop :=
   atomic_harmony /\
   (forall d : Dyn, (f_zig (F d))) /\ (forall d : Dyn, (f_zag (F d))).
 
-Definition bis_at_points (p: point W) (p': point W') : Prop :=
+Definition bis_at_sm (p: state_model W) (p': state_model W') : Prop :=
   bisimulation /\ Z p p'.
 
 (* Theorem *)
 
 Theorem InvarianceUnderBisimulation :
-forall (p: point W) (p': point W'),
-    bis_at_points p p' -> equivalent_at_points p p'.
+forall (p: state_model W) (p': state_model W'),
+    bis_at_sm p p' -> equivalent_at_sm p p'.
 
 Proof.
   intros p p'. (* name each component of the points *)
-  unfold bis_at_points.          (* unfold definitions *)
-  unfold equivalent_at_points.
+  unfold bis_at_sm.          (* unfold definitions *)
+  unfold equivalent_at_sm.
   unfold bisimulation.
 
   intros [ [HAtomicHarmony [HFZig HFZag]] HZwSw'S'].
