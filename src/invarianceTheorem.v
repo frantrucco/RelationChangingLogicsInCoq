@@ -1,4 +1,4 @@
-Require Import ssreflect.
+From Mtac2 Require Import Mtac2.
 From Coq.Relations Require Import Relations.
 
 Section invarianceTheorem.
@@ -60,14 +60,13 @@ Notation "[o] d phi" := (DynBox d phi)
 (* Semantics *)
 Definition val (W: Set) : Type := W -> prop -> Prop.
 
-Definition point (W: Set) : Type := (W * relation W * val W).
+Structure point (W: Set) : Type := {
+  value: W; rel: relation W; valuation: val W
+}.
 
-Definition value {W} (p: point W) :=
-  let '(v, _, _) := p in v.
-Definition rel {W} (p: point W) :=
-  let '(_, r, _) := p in r.
-Definition valuation {W} (p: point W) :=
-  let '(_, _, v) := p in v.
+Arguments value {W}.
+Arguments rel {W}.
+Arguments valuation {W}.
 
 Definition muf : Type := forall (W : Set),
   point W -> (point W -> Prop).
@@ -76,7 +75,7 @@ Variable F : Dyn -> muf.
 
 Fixpoint satisfies (W : Set) (p: point W) (phi : form) : Prop :=
   match phi with
-  | Atom a => valuation p (value p) a
+  | Atom a => p.(valuation) p.(value) a
   | Bottom => False
   | If phi1 phi2 => (satisfies W p phi1) -> (satisfies W p phi2)
   | DynDiam d phi =>
@@ -98,7 +97,7 @@ Definition model_to_model_relation : Type :=
 Variable Z : model_to_model_relation.
 
 Definition atomic_harmony : Prop :=
-  forall p p', Z p p' -> valuation p (value p) = valuation p' (value p').
+  forall p p', Z p p' -> p.(valuation) p.(value) = p'.(valuation) p'.(value).
 
 Definition f_zig (f : muf) : Prop :=
   forall p q p', Z p p' ->
@@ -129,7 +128,7 @@ Proof.
   unfold equivalent_at_points.
   unfold bisimulation.
 
-  intros [[HAtomicHarmony [HFZig HFZag]] HZwSw'S'].
+  intros [ [HAtomicHarmony [HFZig HFZag]] HZwSw'S'].
   intros phi.
   
   generalize dependent p'. generalize dependent p.
