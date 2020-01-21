@@ -1,6 +1,25 @@
 From Mtac2 Require Import Mtac2.
 From Coq.Relations Require Import Relations.
 
+Obligation Tactic := idtac.
+Import M.notations.
+Polymorphic Definition fill {A B} (a : A) (b: B) {C} : M C :=
+  (mfix1 f (d: dyn) : M C :=
+    mmatch d with
+    | [? V t] @Dyn (forall x:B, V x) t =u> [eqd]
+        eqC <- M.unify_or_fail UniCoq C (V b);
+        match eqC in (_ =m= y0) return (M y0 -> M C) with
+        | meq_refl => fun HC0 : M C => HC0
+        end (M.ret (t b))
+    | [? U V t] @Dyn (forall x:U, V x) t =>
+      e <- M.evar U;
+      f (Dyn (t e))
+    | _ => M.raise WrongTerm
+    end) (Dyn a).
+
+Notation "a ?? b" := (ltac:(mrun (fill a b))) (at level 0).
+
+
 Section invarianceTheorem.
 
 (* Syntax *)
@@ -118,6 +137,7 @@ Definition bis_at_sm (p: state_model W) (p': state_model W') : Prop :=
 
 (* Theorem *)
 
+
 Theorem InvarianceUnderBisimulation :
 forall (p: state_model W) (p': state_model W'),
     bis_at_sm p p' -> equivalent_at_sm p p'.
@@ -135,30 +155,29 @@ Proof.
   
   induction phi as [prop | | phi IHphi psi IHpsi | d phi IH];
   simpl.                (* This tactic unfolds definitions *)
-  + intros p p' HZpp'. rewrite (HAtomicHarmony _ _ HZpp'). tauto.
+  + intros p p' HZpp'. rewrite (HAtomicHarmony ?? HZpp'). tauto.
   + tauto.
   + intros p p'; split;
     intros HIf Hsat;
-    apply (IHpsi _ _ HZwSw'S');
+    apply (IHpsi ?? HZwSw'S');
     apply HIf;
-    apply (IHphi _ _ HZwSw'S');
+    apply (IHphi ?? HZwSw'S');
     apply Hsat.
   + intros p p'. split; simpl.
     - intros [q [HfWpp' Hsatq]].
-      apply (HFZig _ _ _ _ HZwSw'S') in HfWpp'
+      apply (HFZig ?? HZwSw'S') in HfWpp'
           as [q' [HfW'q'p' HZqq']].
       eexists.
       split.
       * eassumption.
-      * eapply IH. eassumption.
-        assumption.
+      * eapply IH; eassumption.
     - intros [q' [HfWpp' Hsatq']].
-      apply (HFZag _ _ _ _ HZwSw'S') in HfWpp'
+      apply (HFZag ?? HZwSw'S') in HfWpp'
           as [q [HfWpq HZqq']].
       eexists.
       split.
       * eassumption.
-      * eapply IH. eassumption. assumption.
+      * eapply IH; eassumption.
 Qed.
 
 End invarianceTheorem.
