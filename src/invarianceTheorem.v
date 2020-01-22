@@ -1,5 +1,6 @@
 From Mtac2 Require Import Mtac2.
 From Coq.Relations Require Import Relations.
+From Coq.Lists Require Import List.
 
 Obligation Tactic := idtac.
 Import M.notations.
@@ -77,6 +78,8 @@ Notation "[o] d phi" := (DynBox d phi)
                         (at level 65, right associativity).
 
 (* Semantics *)
+Definition set (S: Type) := S -> Prop.
+
 Definition val (W: Set) : Type := W -> prop -> Prop.
 
 Structure state_model (W: Set) := {
@@ -88,7 +91,7 @@ Arguments rel {W}.
 Arguments valuation {W}.
 
 Definition muf : Type := forall (W : Set),
-  state_model W -> (state_model W -> Prop).
+  state_model W -> set (state_model W).
 
 Variable F : Dyn -> muf.
 
@@ -186,9 +189,15 @@ Structure Model := {
   wval: val wstates
 }.
 
-Section sat.
+Section finset.
+Definition finset {S} (s: set S) : Type := {l : list S | Forall s l}.
 
-Definition set (S: Type) := S -> Prop.
+Definition list_of {S} {s: set S} (l: finset s) : list S := proj1_sig l.
+End finset.
+
+Coercion list_of : finset >-> list.
+
+Section sat.
 
 Variable _M : Model.
 Variable _S : set (state_model _M).
@@ -198,18 +207,13 @@ Definition sat :=
   exists st : state_model _M, _S st -> forall ϕ : form, Σ ϕ -> 
   st |= ϕ.
 
-Require Import Lists.List.
-
-Definition finset {S} (s: set S) : Type := {l : list S | Forall s l}.
-
-Definition list_of {S} {s: set S} (l: finset s) : list S := proj1_sig l. 
-Coercion list_of : finset >-> list.
-
 Definition f_sat := forall l: finset Σ,
   exists st : state_model _M, _S st -> Forall (fun ϕ : form=> st |= ϕ) l.
 
+End sat.
 
-
+Arguments sat {_}.
+Arguments f_sat {_}.
 
 (* Local Variables: *)
 (* company-coq-local-symbols: ( ("_M" . ?ℳ) ("_S" . ?𝒮) ) *)
