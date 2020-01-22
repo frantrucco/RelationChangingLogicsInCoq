@@ -79,7 +79,7 @@ Notation "[o] d phi" := (DynBox d phi)
 (* Semantics *)
 Definition val (W: Set) : Type := W -> prop -> Prop.
 
-Structure state_model (W: Set) : Type := {
+Structure state_model (W: Set) := {
   value: W; rel: relation W; valuation: val W
 }.
 
@@ -188,21 +188,29 @@ Structure Model := {
 
 Section sat.
 
+Definition set (S: Type) := S -> Prop.
+
 Variable _M : Model.
-Variable _S : state_model _M -> Prop.
-Variable Σ : form -> Prop.
+Variable _S : set (state_model _M).
+Variable Σ : set form.
 
 Definition sat :=
-  exists st : state_model _M, forall ϕ : form, _S st -> Σ ϕ -> 
+  exists st : state_model _M, _S st -> forall ϕ : form, Σ ϕ -> 
   st |= ϕ.
 
-From mathcomp Require Import all_ssreflect.
+Require Import Lists.List.
 
+Definition finset {S} (s: set S) : Type := {l : list S | Forall s l}.
 
+Definition list_of {S} {s: set S} (l: finset s) : list S := proj1_sig l. 
+Coercion list_of : finset >-> list.
+
+Definition f_sat := forall l: finset Σ,
+  exists st : state_model _M, _S st -> Forall (fun ϕ : form=> st |= ϕ) l.
 
 
 
 
 (* Local Variables: *)
-(* company-coq-local-symbols: (("[[" . ?⟦) ("]]" . ?⟧) ("_n" . ?ₙ) ("&>" . ?⊳) ("[[?" . (?⟦ (Br . Bl) ?\?)) ("|1>" . (?⊳ (Br . Bl) ?₁)) ("l>" . (?⊳ (Br . Bl) ?ₗ)) ("_M" . ?ℳ) ("_S" . ?𝒮) ) *)
+(* company-coq-local-symbols: ( ("_M" . ?ℳ) ("_S" . ?𝒮) ) *)
 (* End: *)
