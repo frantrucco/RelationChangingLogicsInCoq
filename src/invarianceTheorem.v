@@ -28,7 +28,7 @@ Variable Dyn : Set.
 Inductive prop : Set :=
   p : nat -> prop.
 
-Inductive form : Type :=
+Inductive form : Set :=
   | Atom    : prop -> form
   | Bottom  : form
   | If      : form -> form -> form
@@ -92,23 +92,23 @@ Definition muf : Type := forall (W : Set),
 
 Variable F : Dyn -> muf.
 
-Fixpoint satisfies (W : Set) (p: state_model W) (phi : form) : Prop :=
+Fixpoint satisfies {W : Set} (p: state_model W) (phi : form) : Prop :=
   match phi with
   | Atom a => p.(valuation) p.(value) a
   | Bottom => False
-  | If phi1 phi2 => (satisfies W p phi1) -> (satisfies W p phi2)
+  | If phi1 phi2 => (satisfies p phi1) -> (satisfies p phi2)
   | DynDiam d phi =>
     let fw := F d W in
-    exists p', fw p p' /\ satisfies W p' phi
+    exists p', fw p p' /\ satisfies p' phi
   end.
 
-Notation "<< W , p >> |= phi" := (satisfies W p phi) (at level 30).
+Notation "p |= phi" := (satisfies p phi) (at level 30).
 
 (* Semantic Definitions *)
 Variables W W' : Set.
 
-Definition equivalent_at_sm p p' :=
-  forall (phi:form), (<<W , p>> |= phi) <-> (<<W' , p' >> |= phi).
+Definition equivalent_at_sm (p: state_model W) (p': state_model W') :=
+  forall (ϕ: form), (p |= ϕ) <-> (p' |= ϕ).
 
 Definition model_to_model_relation : Type :=
   state_model W -> state_model W' -> Prop.
@@ -149,19 +149,19 @@ Proof.
   unfold bisimulation.
 
   intros [ [HAtomicHarmony [HFZig HFZag]] HZwSw'S'].
-  intros phi.
+  intros ϕ.
   
   generalize dependent p'. generalize dependent p.
   
-  induction phi as [prop | | phi IHphi psi IHpsi | d phi IH];
+  induction ϕ as [prop | | ϕ IHϕ ψ IHψ | d ϕ IH];
   simpl.                (* This tactic unfolds definitions *)
   + intros p p' HZpp'. rewrite (HAtomicHarmony ?? HZpp'). tauto.
   + tauto.
   + intros p p'; split;
     intros HIf Hsat;
-    apply (IHpsi ?? HZwSw'S');
+    apply (IHψ ?? HZwSw'S');
     apply HIf;
-    apply (IHphi ?? HZwSw'S');
+    apply (IHϕ ?? HZwSw'S');
     apply Hsat.
   + intros p p'. split; simpl.
     - intros [q [HfWpp' Hsatq]].
@@ -180,4 +180,29 @@ Proof.
       * eapply IH; eassumption.
 Qed.
 
-End invarianceTheorem.
+Structure Model := {
+  wstates :> Set;
+  wrel : relation wstates;
+  wval: val wstates
+}.
+
+Section sat.
+
+Variable _M : Model.
+Variable _S : state_model _M -> Prop.
+Variable Σ : form -> Prop.
+
+Definition sat :=
+  exists st : state_model _M, forall ϕ : form, _S st -> Σ ϕ -> 
+  st |= ϕ.
+
+From mathcomp Require Import all_ssreflect.
+
+
+
+
+
+
+(* Local Variables: *)
+(* company-coq-local-symbols: (("[[" . ?⟦) ("]]" . ?⟧) ("_n" . ?ₙ) ("&>" . ?⊳) ("[[?" . (?⟦ (Br . Bl) ?\?)) ("|1>" . (?⊳ (Br . Bl) ?₁)) ("l>" . (?⊳ (Br . Bl) ?ₗ)) ("_M" . ?ℳ) ("_S" . ?𝒮) ) *)
+(* End: *)
