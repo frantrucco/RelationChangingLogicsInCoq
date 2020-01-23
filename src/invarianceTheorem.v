@@ -231,9 +231,9 @@ Definition is_image_iden
   (st_rel st = m_rel _M /\ st_val st = m_val _M).
 
 Definition is_image_fw
-           (fw : state_model _M -> set (state_model _M))
+           (fw : muf)
            (st : state_model _M) :=
-  (exists st': state_model _M, fw st' st).
+  (exists st': state_model _M, fw _M st' st).
 
 Definition is_image fw st :=
   is_image_iden st \/ is_image_fw fw st.
