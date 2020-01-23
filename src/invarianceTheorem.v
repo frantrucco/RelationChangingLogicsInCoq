@@ -2,8 +2,12 @@ From Mtac2 Require Import Mtac2.
 From Coq.Relations Require Import Relations.
 From Coq.Lists Require Import List.
 
+Module Utilities. (* move to file! *)
+
 Obligation Tactic := idtac.
 Import M.notations.
+
+(* [a ?? b] will fill with enough _ until [a _ ... _ b] is typed *)
 Polymorphic Definition fill {A B} (a : A) (b: B) {C} : M C :=
   (mfix1 f (d: dyn) : M C :=
     mmatch d with
@@ -20,14 +24,57 @@ Polymorphic Definition fill {A B} (a : A) (b: B) {C} : M C :=
 
 Notation "a ?? b" := (ltac:(mrun (fill a b))) (at level 0).
 
+End Utilities.
 
-Section invarianceTheorem.
+Module Sets.
+
+Definition set (S: Type) := S -> Prop.
+
+Definition finset {S} (s: set S) : Type := {l : list S | Forall s l}.
+
+Definition list_of {S} {s: set S} (l: finset s) : list S := proj1_sig l.
+
+Coercion list_of : finset >-> list.
+
+End Sets.
+
+Import Utilities.
+Import Sets.
+
+(* General definitions *)
+
+(* The set of propositional variables. *)
+Inductive prop : Set :=
+  p : nat -> prop.
+
+(* Valuation function *)
+Definition valuation (W: Set) : Type := W -> prop -> Prop.
+
+Structure model := {
+  m_states :> Set;
+  m_rel : relation m_states;
+  m_val: valuation m_states
+}.
+
+Structure pointed_model := {
+  pm_model :> model;
+  pm_point : pm_model
+}.
+
+Structure state_model (W: Set) := {
+  st_point: W; st_rel: relation W; st_val: valuation W
+}.
+
+Arguments st_point {W}.
+Arguments st_rel {W}.
+Arguments st_val {W}.
+
+
+
+Section InvarianceTheorem.
 
 (* Syntax *)
 Variable Dyn : Set.
-
-Inductive prop : Set :=
-  p : nat -> prop.
 
 Inductive form : Set :=
   | Atom    : prop -> form
@@ -79,17 +126,6 @@ Notation "[o] d phi" := (DynBox d phi)
                         (at level 65, right associativity).
 
 (* Semantics *)
-Definition set (S: Type) := S -> Prop.
-
-Definition valuation (W: Set) : Type := W -> prop -> Prop.
-
-Structure state_model (W: Set) := {
-  st_point: W; st_rel: relation W; st_val: valuation W
-}.
-
-Arguments st_point {W}.
-Arguments st_rel {W}.
-Arguments st_val {W}.
 
 Definition muf : Type := forall (W : Set),
   state_model W -> set (state_model W).
@@ -184,26 +220,9 @@ Proof.
       * eapply IH; eassumption.
 Qed.
 
-Structure Model := {
-  m_states :> Set;
-  m_rel : relation m_states;
-  m_val: valuation m_states
-}.
+Section Satisfability.
 
-
-Section finset.
-Definition finset {S} (s: set S) : Type := {l : list S | Forall s l}.
-
-Definition list_of {S} {s: set S} (l: finset s) : list S := proj1_sig l.
-
-End finset.
-
-
-Coercion list_of : finset >-> list.
-
-Section sat.
-
-Variable _M : Model.
+Variable _M : model.
 Variable _S : set (state_model _M).
 Variable Σ : set form.
 Variable ϕ : form.
@@ -215,14 +234,14 @@ Definition sat :=
 Definition f_sat := forall l: finset Σ,
   exists st : state_model _M, _S st -> Forall (fun ϕ : form=> st |= ϕ) l.
 
-End sat.
+End Satisfability.
 
 Arguments sat {_}.
 Arguments f_sat {_}.
 
-Section saturation.
+Section Saturation.
 
-Variable _M : Model.
+Variable _M : model.
 Variable d : Dyn.
 Definition fw := F d _M.
 
@@ -237,8 +256,6 @@ Definition is_image_fw
 
 Definition is_image fw st :=
   is_image_iden st \/ is_image_fw fw st.
-
-Print state_model.
 
 Definition successors (w : _M) : state_model _M -> state_model _M -> Prop :=
   fun '{| st_point := _; st_rel := S1; st_val := X1 |}
@@ -260,11 +277,18 @@ Definition saturation :=
      let _S := successors w st in
      f_sat _S Σ -> sat _S Σ).
 
-End saturation.
+End Saturation.
 
+Section HennesyMilner.
 
+Variable _M : model.
+Variable _M' : model.
 
+Hypothesis M_sat : saturation _M.
+Hypothesis M'_sat : saturation _M'.
+
+End HennesyMilner.
 
 (* Local Variables: *)
-(* company-coq-local-symbols: ( ("_M" . ?ℳ) ("_S" . ?𝒮) ) *)
+(* company-coq-local-symbols: ( ("_M" . ?ℳ) ("_M'" . (?ℳ (Br . Bl) ?')) ("_S" . ?𝒮) ) *)
 (* End: *)
