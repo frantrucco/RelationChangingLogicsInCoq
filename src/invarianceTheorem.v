@@ -231,9 +231,9 @@ Definition is_image_iden
   (st_rel st = m_rel _M /\ st_val st = m_val _M).
 
 Definition is_image_fw
-           (fw : muf)
+           (fw : state_model _M -> set (state_model _M))
            (st : state_model _M) :=
-  (exists st': state_model _M, fw _M st' st).
+  (exists st': state_model _M, fw st' st).
 
 Definition is_image fw st :=
   is_image_iden st \/ is_image_fw fw st.
@@ -261,6 +261,8 @@ Definition saturation :=
      f_sat _S Σ -> sat _S Σ).
 
 End saturation.
+
+
 
 
 (* Local Variables: *)
