@@ -81,15 +81,15 @@ Notation "[o] d phi" := (DynBox d phi)
 (* Semantics *)
 Definition set (S: Type) := S -> Prop.
 
-Definition val (W: Set) : Type := W -> prop -> Prop.
+Definition valuation (W: Set) : Type := W -> prop -> Prop.
 
 Structure state_model (W: Set) := {
-  value: W; rel: relation W; valuation: val W
+  st_point: W; st_rel: relation W; st_val: valuation W
 }.
 
-Arguments value {W}.
-Arguments rel {W}.
-Arguments valuation {W}.
+Arguments st_point {W}.
+Arguments st_rel {W}.
+Arguments st_val {W}.
 
 Definition muf : Type := forall (W : Set),
   state_model W -> set (state_model W).
@@ -98,7 +98,7 @@ Variable F : Dyn -> muf.
 
 Fixpoint satisfies {W : Set} (p: state_model W) (phi : form) : Prop :=
   match phi with
-  | Atom a => p.(valuation) p.(value) a
+  | Atom a => p.(st_val) p.(st_point) a
   | Bottom => False
   | If phi1 phi2 => (satisfies p phi1) -> (satisfies p phi2)
   | DynDiam d phi =>
@@ -120,7 +120,7 @@ Definition model_to_model_relation : Type :=
 Variable Z : model_to_model_relation.
 
 Definition atomic_harmony : Prop :=
-  forall p p', Z p p' -> p.(valuation) p.(value) = p'.(valuation) p'.(value).
+  forall p p', Z p p' -> p.(st_val) p.(st_point) = p'.(st_val) p'.(st_point).
 
 Definition f_zig (f : muf) : Prop :=
   forall p q p', Z p p' ->
@@ -185,9 +185,9 @@ Proof.
 Qed.
 
 Structure Model := {
-  wstates :> Set;
-  wrel : relation wstates;
-  wval: val wstates
+  m_states :> Set;
+  m_rel : relation m_states;
+  m_val: valuation m_states
 }.
 
 
@@ -228,7 +228,7 @@ Definition fw := F d _M.
 
 Definition is_image_iden
            (st : state_model _M) :=
-  (rel st = wrel _M /\ valuation st = wval _M).
+  (st_rel st = m_rel _M /\ st_val st = m_val _M).
 
 Definition is_image_fw
            (fw : state_model _M -> set (state_model _M))
@@ -241,8 +241,8 @@ Definition is_image fw st :=
 Print state_model.
 
 Definition successors (w : _M) : state_model _M -> state_model _M -> Prop :=
-  fun '{| value := _; rel := S1; valuation := X1 |}
-    '{| value := t; rel := S2; valuation := X2 |} =>
+  fun '{| st_point := _; st_rel := S1; st_val := X1 |}
+    '{| st_point := t; st_rel := S2; st_val := X2 |} =>
   S1 = S2 /\ X1 = X2 /\ S1 w t.
 
 Definition saturation :=
