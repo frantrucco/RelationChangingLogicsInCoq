@@ -236,21 +236,14 @@ Definition is_image_fw
   (exists st': state_model _M, fw st' st).
 
 Definition is_image fw st :=
-  is_image_iden st /\ is_image_fw fw st.
+  is_image_iden st \/ is_image_fw fw st.
 
 Print state_model.
 
-Definition successors (w : _M) st :=
-  fun st' =>
-
-  let S := rel st in
-  let X := valuation st in
-
-  let t := value st' in
-  let S' := rel st' in
-  let X' := valuation st' in
-
-  S = S' /\ X = X' /\ S w t.
+Definition successors (w : _M) : state_model _M -> state_model _M -> Prop :=
+  fun '{| value := _; rel := S1; valuation := X1 |}
+    '{| value := t; rel := S2; valuation := X2 |} =>
+  S1 = S2 /\ X1 = X2 /\ S1 w t.
 
 Definition saturation :=
   forall (Σ : set form),
