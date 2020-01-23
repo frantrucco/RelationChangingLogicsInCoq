@@ -72,6 +72,7 @@ Notation "p <->' q" := (Iif p q)
                      (at level 95, right associativity).
 
 Notation "<o> d phi" := (DynDiam d phi)
+
                         (at level 65, right associativity).
 
 Notation "[o] d phi" := (DynBox d phi)
@@ -153,9 +154,9 @@ Proof.
 
   intros [ [HAtomicHarmony [HFZig HFZag]] HZwSw'S'].
   intros ϕ.
-  
+
   generalize dependent p'. generalize dependent p.
-  
+
   induction ϕ as [prop | | ϕ IHϕ ψ IHψ | d ϕ IH];
   simpl.                (* This tactic unfolds definitions *)
   + intros p p' HZpp'. rewrite (HAtomicHarmony ?? HZpp'). tauto.
@@ -189,11 +190,14 @@ Structure Model := {
   wval: val wstates
 }.
 
+
 Section finset.
 Definition finset {S} (s: set S) : Type := {l : list S | Forall s l}.
 
 Definition list_of {S} {s: set S} (l: finset s) : list S := proj1_sig l.
+
 End finset.
+
 
 Coercion list_of : finset >-> list.
 
@@ -202,9 +206,10 @@ Section sat.
 Variable _M : Model.
 Variable _S : set (state_model _M).
 Variable Σ : set form.
+Variable ϕ : form.
 
 Definition sat :=
-  exists st : state_model _M, _S st -> forall ϕ : form, Σ ϕ -> 
+  exists st : state_model _M, _S st -> forall ϕ : form, Σ ϕ ->
   st |= ϕ.
 
 Definition f_sat := forall l: finset Σ,
@@ -214,6 +219,56 @@ End sat.
 
 Arguments sat {_}.
 Arguments f_sat {_}.
+
+Section saturation.
+
+Variable _M : Model.
+Variable d : Dyn.
+Definition fw := F d _M.
+
+Definition is_image_iden
+           (st : state_model _M) :=
+  (rel st = wrel _M /\ valuation st = wval _M).
+
+Definition is_image_fw
+           (fw : state_model _M -> set (state_model _M))
+           (st : state_model _M) :=
+  (exists st': state_model _M, fw st' st).
+
+Definition is_image fw st :=
+  is_image_iden st /\ is_image_fw fw st.
+
+Print state_model.
+
+Definition successors (w : _M) st :=
+  fun st' =>
+
+  let S := rel st in
+  let X := valuation st in
+
+  let t := value st' in
+  let S' := rel st' in
+  let X' := valuation st' in
+
+  S = S' /\ X = X' /\ S w t.
+
+Definition saturation :=
+  forall (Σ : set form),
+  forall (d : Dyn),
+  let fw := F d _M in
+  forall st : state_model _M, is_image fw st ->
+
+    (* Saturation of every possible updated model *)
+    (let _S := fw st in
+     f_sat _S Σ -> sat _S Σ) /\
+
+    (* Saturation of every successor *)
+    (forall w : _M,
+     let _S := successors w st in
+     f_sat _S Σ -> sat _S Σ).
+
+End saturation.
+
 
 (* Local Variables: *)
 (* company-coq-local-symbols: ( ("_M" . ?ℳ) ("_S" . ?𝒮) ) *)
