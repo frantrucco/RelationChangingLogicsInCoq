@@ -1,4 +1,5 @@
 From Mtac2 Require Import Mtac2.
+From Coq.Sets Require Import Constructive_sets.
 From Coq.Relations Require Import Relations.
 From Coq.Lists Require Import List.
 
@@ -30,7 +31,13 @@ End Utilities.
 
 Module Sets.
 
-Definition set (S: Type) := S -> Prop.
+Notation "'set' S" := (Ensemble S) (at level 0) : type_scope.
+
+Arguments Union {_}.
+Notation "a ∪ b" := (Union a b) (at level 85).
+
+Arguments Ensembles.In {_}.
+Notation "a ∈ b" := (Ensembles.In b a) (at level 60).
 
 Definition finset {S} (s: set S) : Type := {l : list S | Forall s l}.
 
@@ -309,17 +316,15 @@ Variable _M : model.
 Variable d : Dyn.
 Definition fw := F d _M.
 
-Definition is_image_iden
-           (st : state_model _M) :=
+Definition image_iden : set (state_model _M) :=
+  fun (st : state_model _M) =>
   (st_rel st = m_rel _M /\ st_val st = m_val _M).
 
-Definition is_image_fw
-           (fw : state_model _M -> set (state_model _M))
-           (st : state_model _M) :=
-  (exists st': state_model _M, fw st' st).
+Definition image_fw : set (state_model _M) := 
+  fun (st : state_model _M) =>
+    (exists st': state_model _M, fw st' st).
 
-Definition is_image fw st :=
-  is_image_iden st \/ is_image_fw fw st.
+Definition image := image_iden ∪ image_fw.
 
 Definition successors (w : _M) : state_model _M -> state_model _M -> Prop :=
   fun '{| st_point := _; st_rel := S1; st_val := X1 |}
@@ -328,9 +333,7 @@ Definition successors (w : _M) : state_model _M -> state_model _M -> Prop :=
 
 Definition saturation :=
   forall (Σ : set form),
-  forall (d : Dyn),
-  let fw := F d _M in
-  forall st : state_model _M, is_image fw st ->
+  forall st : state_model _M, st ∈ image ->
 
     (* Saturation of every possible updated model *)
     (let _S := fw st in
@@ -345,11 +348,26 @@ End Saturation.
 
 Section HennesyMilner.
 
-Variable _M : model.
-Variable _M' : model.
 
-Hypothesis M_sat : saturation _M.
-Hypothesis M'_sat : saturation _M'.
+Variable d : Dyn. (* for the moment, just one *)
+
+Variable _M : pointed_model.
+Variable _M' : pointed_model.
+
+Hypothesis M_sat : saturation _M d.
+Hypothesis M'_sat : saturation _M' d.
+
+Let f__W := F d _M.
+Let f__W' := F d _M'.
+
+Definition weneedaname := forall st st',
+    st ∈ image _M d ->
+    st' ∈ image _M' d ->
+    st ≡ st'.
+
+Notation "a ↭ b" := (weneedaname a b) (at level 40).
+
+Theorem HennesyMilner : _M ≡ _M' -> bisimilar _M _M'.
 
 End HennesyMilner.
 
