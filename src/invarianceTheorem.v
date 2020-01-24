@@ -206,33 +206,24 @@ Lemma to_st_point (_M: pointed_model) : pm_point _M = st_point _M.
   by [].
 Qed.
 
-(* Lemma to_pm_sat (_M: pointed_model) (st: state_model _M) (ϕ: form) : *)
-(*   _M |= ϕ <-> st |= ϕ. *)
-(*   destruct _M. *)
-(*   destruct st. *)
-(*   destruct pm_model0. *)
-(*   simpl in *. *)
-(*   by []. *)
-(* Qed. *)
+Definition get_HA {W W'} {Z: state_model_relation W W'} (bis: bisimulation Z) : atomic_harmony _ _ Z.
+  move: bis =>[HA _].
+  exact: HA.
+Defined.
 
-(* Definition get_HA {W W'} {Z: state_model_relation W W'} (bis: bisimulation Z) : atomic_harmony _ _ Z. *)
-(*   move: bis =>[HA _]. *)
-(*   exact: HA. *)
-(* Defined. *)
+Definition get_Zig {W W'} {Z: state_model_relation W W'} (bis: bisimulation Z) : (forall d : Dyn, (f_zig ?? Z (F d))).
+  move: bis =>[_ [H _]].
+  exact: H.
+Defined.
 
-(* Definition get_Zig {W W'} {Z: state_model_relation W W'} (bis: bisimulation Z) : (forall d : Dyn, (f_zig ?? Z (F d))). *)
-(*   move: bis =>[_ [H _]]. *)
-(*   exact: H. *)
-(* Defined. *)
+Definition get_Zag {W W'} {Z: state_model_relation W W'} (bis: bisimulation Z) : (forall d : Dyn, (f_zag ?? Z (F d))).
+  move: bis =>[_ [_ H]].
+  exact: H.
+Defined.
 
-(* Definition get_Zag {W W'} {Z: state_model_relation W W'} (bis: bisimulation Z) : (forall d : Dyn, (f_zag ?? Z (F d))). *)
-(*   move: bis =>[_ [_ H]]. *)
-(*   exact: H. *)
-(* Defined. *)
-
-(* Theorem bisimilar_sym _M _M': bisimilar _M _M' <-> bisimilar _M' _M. *)
-(* Proof. *)
-(* Admitted.   *)
+Lemma to_st_to_pm {W} (st: state_model W): to_st (to_pm st) = st.
+  by case: st.
+Defined.
 
 Theorem InvarianceUnderBisimulation :
   forall _M _M' : pointed_model,
@@ -241,8 +232,6 @@ Theorem InvarianceUnderBisimulation :
 Proof.
   move=> _M _M' bis ϕ.
   move: _M _M' bis.
-  (* intros [Z [ [HAtomicHarmony [HFZig HFZag]] HZ]]. *)
-  (* intros ϕ. *)
   induction ϕ as [prop | | ϕ IHϕ ψ IHψ | d ϕ IH]; simpl;
   intros _M _M' [Z [bis HZ]].
   + rewrite !to_st_val !to_st_point ((get_HA bis) ?? HZ).
@@ -271,15 +260,28 @@ Proof.
       eexists.
       split.
       * eassumption.
-      * Set Printing Coercions. 
-        eapply IH; eassumption.
+      * eapply (IH (to_pm q)); last by eassumption.
+        unfold bisimilar.
+        eexists.
+        split; last first.
+        ++ rewrite !to_st_to_pm.
+           eassumption.
+        ++ assumption.
+      * assumption.
     - intros [q' [HfWpp' Hsatq']].
-      apply (HFZag ?? HZwSw'S') in HfWpp'
+      eapply (get_Zag bis) in HfWpp'
           as [q [HfWpq HZqq']].
       eexists.
       split.
       * eassumption.
-      * eapply IH; eassumption.
+      * eapply (IH (to_pm q)); last by eassumption.
+        unfold bisimilar.
+        eexists.
+        split; last first.
+        ++ rewrite !to_st_to_pm.
+           eassumption.
+        ++ assumption.
+      * assumption.
 Qed.
 
 Section Satisfability.
