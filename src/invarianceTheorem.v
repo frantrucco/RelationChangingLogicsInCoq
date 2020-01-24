@@ -39,6 +39,7 @@ Notation "a ∪ b" := (Union a b) (at level 85).
 Arguments Ensembles.In {_}.
 Notation "a ∈ b" := (Ensembles.In b a) (at level 60).
 
+Definition Forall {S} (s: S -> Prop) l := fold_left (fun b a=>s a /\ b) l True.
 Definition finset {S} (s: set S) : Type := {l : list S | Forall s l}.
 
 Definition list_of {S} {s: set S} (l: finset s) : list S := proj1_sig l.
@@ -380,11 +381,18 @@ Proof.
       by move/seqs': sat.
   - move=>d' [s S X] [t T Y] [s' S' X'] /=.
     move=>[imgS [imgS' SeqS']] tTYinsSX.
-    set Σ := ({ϕ | ⟨ s , S , X ⟩ |= ϕ}).
-    have finsat : f_sat 
-    eexists.
-    split.
-    unfold saturation in M_sat.
+    set Σ : set form := (fun ϕ=> ⟨ s , S , X ⟩ |= ϕ).
+    evar (e: set (state_model _M)). 
+    have finsat : f_sat e Σ. 
+    + move=>[l].
+      set big_and := fold_left And l Top.
+      have sat_big_and : (⟨s, S, X⟩ |= DynDiam d' big_and).
+      * unfold big_and; clear big_and.
+simpl.
+        elim: l.
+        -- eexists; split; last by [].
+           eassumption.
+        -- move=>ϕ l [sm [Fsm satl]].
     
 Theorem HennesyMilner : _M ≡ _M' -> bisimilar _M _M'.
 
