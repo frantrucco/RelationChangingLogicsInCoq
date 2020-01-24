@@ -74,6 +74,8 @@ Structure state_model (W: Set) := {
   st_point: W; st_rel: relation W; st_val: valuation W
 }.
 
+Notation "⟨ a , b , c ⟩" := {| st_point := a; st_val := c; st_rel := b |}.
+
 Arguments st_point {W}.
 Arguments st_rel {W}.
 Arguments st_val {W}.
@@ -101,6 +103,8 @@ Inductive form : Set :=
   | Bottom  : form
   | If      : form -> form -> form
   | DynDiam : Dyn -> form -> form.
+
+Coercion Atom : prop >-> form.
 
 (* Syntactic sugar *)
 Definition Not (phi : form) : form :=
@@ -180,7 +184,7 @@ Definition state_model_relation : Type :=
 Variable Z : state_model_relation.
 
 Definition atomic_harmony : Prop :=
-  forall p p', Z p p' -> forall pr: prop, p.(st_val) p.(st_point) pr = p'.(st_val) p'.(st_point) pr.
+  forall p p', Z p p' -> forall pr: prop, p.(st_val) p.(st_point) pr <-> p'.(st_val) p'.(st_point) pr.
 
 Definition f_zig (f : muf) : Prop :=
   forall p q p', Z p p' ->
@@ -348,25 +352,40 @@ End Saturation.
 
 Section HennesyMilner.
 
-
-Variable d : Dyn. (* for the moment, just one *)
-
 Variable _M : pointed_model.
 Variable _M' : pointed_model.
 
-Hypothesis M_sat : saturation _M d.
-Hypothesis M'_sat : saturation _M' d.
+Hypothesis M_sat : forall d, saturation _M d.
+Hypothesis M'_sat : forall d, saturation _M' d.
 
-Let f__W := F d _M.
-Let f__W' := F d _M'.
+Let f__W := fun d=> F d _M.
+Let f__W' := fun d=> F d _M'.
 
-Definition weneedaname := forall st st',
-    st ∈ image _M d ->
-    st' ∈ image _M' d ->
+Definition weneedaname d st st' :=
+    st ∈ image _M d /\
+    st' ∈ image _M' d /\
     st ≡ st'.
 
-Notation "a ↭ b" := (weneedaname a b) (at level 40).
+Notation "a ↭ b" := (weneedaname _ a b) (at level 40).
 
+Lemma weneedaname_bisimulation : forall d, bisimulation (weneedaname d).
+Proof.
+  split; last split.
+  - move=> s s' s_s' p.
+    case: s_s' =>[s_img [s'_img seqs']].
+    split; intro H.
+    + have sat : s |= p by assumption.
+      by move/seqs': sat.
+    + have sat : s' |= p by assumption.
+      by move/seqs': sat.
+  - move=>d' [s S X] [t T Y] [s' S' X'] /=.
+    move=>[imgS [imgS' SeqS']] tTYinsSX.
+    set Σ := ({ϕ | ⟨ s , S , X ⟩ |= ϕ}).
+    have finsat : f_sat 
+    eexists.
+    split.
+    unfold saturation in M_sat.
+    
 Theorem HennesyMilner : _M ≡ _M' -> bisimilar _M _M'.
 
 End HennesyMilner.
