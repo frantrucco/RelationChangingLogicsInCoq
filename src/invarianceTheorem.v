@@ -382,39 +382,27 @@ Proof.
   - move=>d' [s S X] [t T Y] [s' S' X'] /=.
     move=>[imgS [imgS' SeqS']] tTYinsSX.
     set Σ : set form := (fun ϕ=> ⟨ t , T , Y ⟩ |= ϕ).
-    evar (e: set (state_model _M)). 
-    have finsat : f_sat e Σ. 
-    + move=>[l].
-      have sat_big_and : (⟨s, S, X⟩ |= DynDiam d' (fold_right And Top l)).
-      * elim: l.
-        -- eexists; split; last by [].
-           eassumption.
-        -- move=>ϕ l [sm [Fsm satl]].
-           eexists; split; first by eassumption.
-           simpl. apply; last by [].
-           admit.
-      * elim: l sat_big_and=>/=.
-        -- by eexists.
-        -- move=>ϕ l /= IHl [p [H1 H2] [H3 H4]].
-           exists ⟨t, T, Y⟩.
-           move=>ine.
-           split.
-           ++ by apply: H3.
-           ++ case: IHl.
-              ** exists p. split; first by [].
-                 have notnot: forall P, ~ (~ P) -> P.
-                 admit.
-                 have bla: p |= fold_right And Top l.
-                 apply: notnot.
-                 move=>P.
-                 apply: H2.
-                 move=>_. assumption.
-                 assumption.
-              ** assumption.
-              ** move=>st. (* game over. *)
-                 admit.
-    +
-  
+    have sat_big_and :
+      forall Δ : finset Σ, (⟨s, S, X⟩ |= DynDiam d' (fold_right And Top Δ)).
+    + case. elim.
+      -- eexists; split; last by [].
+         eassumption.
+      -- move=>ϕ l /= IHl [Σϕ FAl].
+         move/IHl: FAl {IHl}.
+         move=>[p [Fp IHp]].
+         exists ⟨t, T, Y⟩; split; first by [].
+         apply; first by [].
+         admit.
+    + have sat_big_and' :
+        forall Δ : finset Σ, (⟨s', S', X'⟩ |= DynDiam d' (fold_right And Top Δ))
+        by move=>Δ; apply/SeqS'.
+      have sat_next' :
+        forall Δ : finset Σ, exists '⟨t'Δ, T'Δ, Y'Δ⟩, ⟨t'Δ, T'Δ, Y'Δ⟩ ∈ (f__W' d' ⟨s', S', X'⟩) ->  (⟨s', S', X'⟩ |= fold_right And Top Δ).
+        move=>Δ.
+        move: (sat_big_and' Δ).
+        simpl. case. move=>[t'Δ T'Δ Y'Δ] [lft rgt].
+        exists ⟨t'Δ, T'Δ, Y'Δ⟩.
+        
 Theorem HennesyMilner : _M ≡ _M' -> bisimilar _M _M'.
 
 End HennesyMilner.
