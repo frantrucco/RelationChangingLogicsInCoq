@@ -39,7 +39,7 @@ Notation "a ∪ b" := (Union a b) (at level 85).
 Arguments Ensembles.In {_}.
 Notation "a ∈ b" := (Ensembles.In b a) (at level 60).
 
-Definition Forall {S} (s: S -> Prop) l := fold_left (fun b a=>s a /\ b) l True.
+Definition Forall {S} (s: S -> Prop) l := fold_right (fun a b=>s a /\ b) True l.
 Definition finset {S} (s: set S) : Type := {l : list S | Forall s l}.
 
 Definition list_of {S} {s: set S} (l: finset s) : list S := proj1_sig l.
@@ -385,15 +385,37 @@ Proof.
     evar (e: set (state_model _M)). 
     have finsat : f_sat e Σ. 
     + move=>[l].
-      set big_and := fold_left And l Top.
-      have sat_big_and : (⟨s, S, X⟩ |= DynDiam d' big_and).
-      * unfold big_and; clear big_and.
-simpl.
-        elim: l.
+      have sat_big_and : (⟨s, S, X⟩ |= DynDiam d' (fold_right And Top l)).
+      * elim: l.
         -- eexists; split; last by [].
            eassumption.
         -- move=>ϕ l [sm [Fsm satl]].
-    
+           eexists; split; first by eassumption.
+           simpl. apply; last by [].
+           admit.
+      * elim: l sat_big_and=>/=.
+        -- by eexists.
+        -- move=>ϕ l /= IHl [p [H1 H2] [H3 H4]].
+           exists ⟨s, S, X⟩.
+           move=>ine.
+           split.
+           ++ by apply: H3.
+           ++ case: IHl.
+              ** exists p. split; first by [].
+                 have notnot: forall P, ~ (~ P) -> P.
+                 admit.
+                 have bla: p |= fold_right And Top l.
+                 apply: notnot.
+                 move=>P.
+                 apply: H2.
+                 move=>_. assumption.
+                 assumption.
+              ** assumption.
+              ** move=>st. (* game over. *)
+                 admit.
+    +
+  -
+        unfold Forall.
 Theorem HennesyMilner : _M ≡ _M' -> bisimilar _M _M'.
 
 End HennesyMilner.
