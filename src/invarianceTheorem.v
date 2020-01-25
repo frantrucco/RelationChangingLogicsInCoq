@@ -381,7 +381,7 @@ Proof.
       by move/seqs': sat.
   - move=>d' [s S X] [t T Y] [s' S' X'] /=.
     move=>[imgS [imgS' SeqS']] tTYinsSX.
-    set Σ : set form := (fun ϕ=> ⟨ s , S , X ⟩ |= ϕ).
+    set Σ : set form := (fun ϕ=> ⟨ t , T , Y ⟩ |= ϕ).
     evar (e: set (state_model _M)). 
     have finsat : f_sat e Σ. 
     + move=>[l].
@@ -396,7 +396,7 @@ Proof.
       * elim: l sat_big_and=>/=.
         -- by eexists.
         -- move=>ϕ l /= IHl [p [H1 H2] [H3 H4]].
-           exists ⟨s, S, X⟩.
+           exists ⟨t, T, Y⟩.
            move=>ine.
            split.
            ++ by apply: H3.
@@ -414,8 +414,7 @@ Proof.
               ** move=>st. (* game over. *)
                  admit.
     +
-  -
-        unfold Forall.
+  
 Theorem HennesyMilner : _M ≡ _M' -> bisimilar _M _M'.
 
 End HennesyMilner.
