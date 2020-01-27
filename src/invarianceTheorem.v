@@ -402,11 +402,15 @@ Proof.
         move: (sat_big_and' Δ).
         simpl. case. move=>[t'Δ T'Δ Y'Δ] [lft rgt].
         exists ⟨t'Δ, T'Δ, Y'Δ⟩.
+        move=> infw'.
+        admit.
+      * have _S' : forall Δ, set (state_model _M') :=
+          fun Δ : finset Σ=>fun t=> let 'ex_intro _ x _ := sat_next' Δ in (t = x : Prop).
         
 Theorem HennesyMilner : _M ≡ _M' -> bisimilar _M _M'.
 
 End HennesyMilner.
 
 (* Local Variables: *)
-(* company-coq-local-symbols: ( ("_M" . ?ℳ) ("_M'" . (?ℳ (Br . Bl) ?')) ("_S" . ?𝒮) ) *)
+(* company-coq-local-symbols: ( ("_M" . ?ℳ) ("_M'" . (?ℳ (Br . Bl) ?')) ("_S" . ?𝒮) ("_S'" . (?𝒮 (Br . Bl) ?')) ) *)
 (* End: *)
