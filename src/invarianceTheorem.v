@@ -103,6 +103,7 @@ Inductive form : Set :=
   | Atom    : prop -> form
   | Bottom  : form
   | If      : form -> form -> form
+  | And     : form -> form -> form
   | DynDiam : Dyn -> form -> form.
 
 Coercion Atom : prop >-> form.
@@ -113,9 +114,6 @@ Definition Not (phi : form) : form :=
 
 Definition Top : form :=
   Not Bottom.
-
-Definition And (phi psi : form) : form :=
-  Not (If phi (Not psi)).
 
 Definition Or (phi psi : form) : form :=
   If (Not phi) psi.
@@ -162,6 +160,7 @@ Fixpoint satisfies (pm: pointed_model) (phi : form) : Prop :=
   | Atom a => pm.(m_val) pm.(pm_point) a
   | Bottom => False
   | If phi1 phi2 => (satisfies pm phi1) -> (satisfies pm phi2)
+  | And phi1 phi2 => (satisfies pm phi1) /\ (satisfies pm phi2)
   | DynDiam d phi =>
     let fw := F d pm in
     exists p', fw pm p' /\ satisfies p' phi
@@ -244,7 +243,7 @@ Theorem InvarianceUnderBisimulation :
 Proof.
   move=> _M _M' bis ϕ.
   move: _M _M' bis.
-  induction ϕ as [prop | | ϕ IHϕ ψ IHψ | d ϕ IH]; simpl;
+  induction ϕ as [prop | | ϕ IHϕ ψ IHψ | ϕ IHϕ ψ IHψ | d ϕ IH]; simpl;
   intros _M _M' [Z [bis HZ]].
   + rewrite !to_st_val !to_st_point ((get_HA bis) ?? HZ).
     tauto.
@@ -264,6 +263,23 @@ Proof.
     eapply (IHϕ _M).
     unfold bisimilar. eexists. split; eassumption.
     eassumption.
+
+  + split;
+    move=> [HIf Hsat].
+    split.
+    - eapply (IHϕ _M).
+      unfold bisimilar. eexists. split; eassumption.
+      apply HIf.
+    -eapply (IHψ _M).
+      unfold bisimilar. eexists. split; eassumption.
+      eassumption.
+    - split.
+      * eapply (IHϕ _M).
+        unfold bisimilar. eexists. split; eassumption.
+        apply HIf.
+      * eapply (IHψ _M).
+        unfold bisimilar. eexists. split; eassumption.
+        eassumption.
     
   + split; simpl.
     - intros [q [HfWpp' Hsatq]].
@@ -372,6 +388,21 @@ Definition weneedaname st st' :=
 
 Notation "a ↭ b" := (weneedaname a b) (at level 40).
 
+Definition big_and Δ := fold_right And Top Δ.
+
+Notation "'⋀' Δ" := (big_and Δ) (at level 0).
+
+Axiom not_not: forall {ϕ : Prop}, ~ ~ ϕ -> ϕ.
+
+Lemma sat_fold_forall m Δ: 
+  Forall (fun ϕ : form => m |= ϕ) Δ <-> m |= ⋀Δ.
+Proof.
+  elim: Δ; first by simpl; tauto.
+  move=>ϕ Δ /= ->.
+  tauto.
+Qed.
+
+
 Lemma weneedaname_bisimulation : bisimulation weneedaname.
 Proof.
   split; last split.
@@ -391,8 +422,6 @@ Proof.
       move=> l. simpl. elim: l=>[ |ϕ Δ IH] H.
       -- by [].
       -- simpl. simpl in H. case: H=>Hϕ HΔ.
-         apply.
-         by [].
          by move/IH: HΔ {IH}.
     + have sat_big_and :
         forall Δ : finset Σ, (⟨s, S, X⟩ |= DynDiam d' (fold_right And Top Δ)).
@@ -418,7 +447,15 @@ Proof.
                          exists Δ : finset Σ, st' |= fold_right And Top Δ.
 
       have f_sat : f_sat _S' Σ.
-
+      unfold f_sat.
+      move=>Δ.
+      move: (sat_big_and'' Δ)=>[st' [infw' satΔ]].
+      exists st'.
+      move=>in_S'.
+      apply sat_fold_forall.
+      by apply satΔ.
+    
+      
 Theorem HennesyMilner : _M ≡ _M' -> bisimilar _M _M'.
 
 End HennesyMilner.
