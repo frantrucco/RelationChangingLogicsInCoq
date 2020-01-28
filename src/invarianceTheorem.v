@@ -42,6 +42,7 @@ Notation "a ∈ b" := (Ensembles.In b a) (at level 60).
 Definition Forall {S} (s: S -> Prop) l := fold_right (fun a b=>s a /\ b) True l.
 Definition finset {S} (s: set S) : Type := {l : list S | Forall s l}.
 
+Program Definition empty_finset {S} {s: set S} : finset s := exist _ nil (I).
 Definition list_of {S} {s: set S} (l: finset s) : list S := proj1_sig l.
 
 Coercion list_of : finset >-> list.
@@ -446,7 +447,7 @@ Proof.
         fun st' => st' ∈ f__W' ⟨ s', S', X' ⟩ /\
                          exists Δ : finset Σ, st' |= fold_right And Top Δ.
 
-      have f_sat : f_sat _S' Σ.
+      have f_sat' : f_sat _S' Σ.
       unfold f_sat.
       move=>Δ.
       move: (sat_big_and'' Δ)=>[st' [infw' satΔ]].
@@ -455,7 +456,19 @@ Proof.
       apply sat_fold_forall.
       by apply satΔ.
     
-      
+      have f_sat'' : f_sat (f__W' ⟨ s', S', X' ⟩) Σ.
+        unfold f_sat.
+        move=>Δ.
+        move: (f_sat' Δ)=>[st' H].
+        exists st'.
+        move=>H'.
+        apply: H.
+        unfold _S'.
+        constructor.
+        auto.
+        exists empty_finset.
+        by [].
+
 Theorem HennesyMilner : _M ≡ _M' -> bisimilar _M _M'.
 
 End HennesyMilner.
