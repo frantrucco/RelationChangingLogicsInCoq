@@ -299,16 +299,18 @@ Qed.
 Section Satisfability.
 
 Variable _M : model.
-Variable _S : set (state_model _M).
+Variable _S : set (state_model _M.(m_states)).
 Variable Σ : set form.
 Variable ϕ : form.
 
 Definition sat :=
-  exists st : state_model _M, _S st -> forall ϕ : form, Σ ϕ ->
-  st |= ϕ.
+  exists st : state_model _M.(m_states),
+    st ∈ _S -> forall ϕ : form, ϕ ∈ Σ ->
+    st |= ϕ.
 
-Definition f_sat := forall l: finset Σ,
-  exists st : state_model _M, _S st -> Forall (fun ϕ : form=> st |= ϕ) l.
+Definition f_sat := forall Δ: finset Σ,
+  exists st : state_model _M, st ∈ _S ->
+  Forall (fun ϕ : form=> st |= ϕ) Δ.
 
 End Satisfability.
 
@@ -318,7 +320,7 @@ Arguments f_sat {_}.
 Section Saturation.
 
 Variable _M : model.
-Variable d : Dyn.
+Variable d : Dyn. (* ver de generalizar *)
 Definition fw := F d _M.
 
 Definition image_iden : set (state_model _M) :=
@@ -327,14 +329,14 @@ Definition image_iden : set (state_model _M) :=
 
 Definition image_fw : set (state_model _M) := 
   fun (st : state_model _M) =>
-    (exists st': state_model _M, fw st' st).
+    (exists st': state_model _M, st ∈ fw st').
 
 Definition image := image_iden ∪ image_fw.
 
-Definition successors (w : _M) : state_model _M -> state_model _M -> Prop :=
-  fun '{| st_point := _; st_rel := S1; st_val := X1 |}
-    '{| st_point := t; st_rel := S2; st_val := X2 |} =>
-  S1 = S2 /\ X1 = X2 /\ S1 w t.
+(* Definition successors (w : _M) : state_model _M -> state_model _M -> Prop := *)
+(*   fun '{| st_point := _; st_rel := S1; st_val := X1 |} *)
+(*     '{| st_point := t; st_rel := S2; st_val := X2 |} => *)
+(*   S1 = S2 /\ X1 = X2 /\ S1 w t. *)
 
 Definition saturation :=
   forall (Σ : set form),
@@ -342,12 +344,12 @@ Definition saturation :=
 
     (* Saturation of every possible updated model *)
     (let _S := fw st in
-     f_sat _S Σ -> sat _S Σ) /\
+     f_sat _S Σ -> sat _S Σ)(*  /\ *)
 
-    (* Saturation of every successor *)
-    (forall w : _M,
-     let _S := successors w st in
-     f_sat _S Σ -> sat _S Σ).
+    (* (* Saturation of every successor *) *)
+    (* (forall w : _M, *)
+    (*  let _S := successors w st in *)
+    (*  f_sat _S Σ -> sat _S Σ) *).
 
 End Saturation.
 
@@ -356,20 +358,21 @@ Section HennesyMilner.
 Variable _M : pointed_model.
 Variable _M' : pointed_model.
 
-Hypothesis M_sat : forall d, saturation _M d.
-Hypothesis M'_sat : forall d, saturation _M' d.
+Variable d : Dyn.
+Hypothesis M_sat : saturation _M d.
+Hypothesis M'_sat : saturation _M' d.
 
-Let f__W := fun d=> F d _M.
-Let f__W' := fun d=> F d _M'.
+Let f__W := F d _M.
+Let f__W' := F d _M'.
 
-Definition weneedaname d st st' :=
+Definition weneedaname st st' :=
     st ∈ image _M d /\
     st' ∈ image _M' d /\
     st ≡ st'.
 
-Notation "a ↭ b" := (weneedaname _ a b) (at level 40).
+Notation "a ↭ b" := (weneedaname a b) (at level 40).
 
-Lemma weneedaname_bisimulation : forall d, bisimulation (weneedaname d).
+Lemma weneedaname_bisimulation : bisimulation weneedaname.
 Proof.
   split; last split.
   - move=> s s' s_s' p.
@@ -382,31 +385,40 @@ Proof.
   - move=>d' [s S X] [t T Y] [s' S' X'] /=.
     move=>[imgS [imgS' SeqS']] tTYinsSX.
     set Σ : set form := (fun ϕ=> ⟨ t , T , Y ⟩ |= ϕ).
-    have sat_big_and :
-      forall Δ : finset Σ, (⟨s, S, X⟩ |= DynDiam d' (fold_right And Top Δ)).
-    + case. elim.
-      -- eexists; split; last by [].
-         eassumption.
-      -- move=>ϕ l /= IHl [Σϕ FAl].
-         move/IHl: FAl {IHl}.
-         move=>[p [Fp IHp]].
-         exists ⟨t, T, Y⟩; split; first by [].
-         apply; first by [].
-         admit.
-    + have sat_big_and' :
+    have sat_big_and0 :
+      forall Δ : finset Σ, ⟨t, T, Y⟩ |= fold_right And Top Δ.
+    + case.
+      move=> l. simpl. elim: l=>[ |ϕ Δ IH] H.
+      -- by [].
+      -- simpl. simpl in H. case: H=>Hϕ HΔ.
+         apply.
+         by [].
+         by move/IH: HΔ {IH}.
+    + have sat_big_and :
+        forall Δ : finset Σ, (⟨s, S, X⟩ |= DynDiam d' (fold_right And Top Δ)).
+      move=>Δ.
+      simpl.
+      eexists.
+      split; first by eassumption.
+      by apply sat_big_and0.
+      have sat_big_and' :
         forall Δ : finset Σ, (⟨s', S', X'⟩ |= DynDiam d' (fold_right And Top Δ))
         by move=>Δ; apply/SeqS'.
-      have sat_next' :
-        forall Δ : finset Σ, exists '⟨t'Δ, T'Δ, Y'Δ⟩, ⟨t'Δ, T'Δ, Y'Δ⟩ ∈ (f__W' d' ⟨s', S', X'⟩) ->  (⟨s', S', X'⟩ |= fold_right And Top Δ).
-        move=>Δ.
-        move: (sat_big_and' Δ).
-        simpl. case. move=>[t'Δ T'Δ Y'Δ] [lft rgt].
-        exists ⟨t'Δ, T'Δ, Y'Δ⟩.
-        move=> infw'.
-        admit.
-      * have _S' : forall Δ, set (state_model _M') :=
-          fun Δ : finset Σ=>fun t=> let 'ex_intro _ x _ := sat_next' Δ in (t = x : Prop).
-        
+      have sat_big_and'' :
+        forall Δ : finset Σ, exists st', st' ∈ f__W' ⟨s', S', X'⟩ /\ st' |= fold_right And Top Δ.
+      move=>Δ.
+      move: (sat_big_and' Δ).
+      simpl. move=>[st' [IH1 IH2]].
+      exists st'.
+      split; last by assumption.
+      admit.
+
+      pose _S' : set (state_model _) :=
+        fun st' => st' ∈ f__W' ⟨ s', S', X' ⟩ /\
+                         exists Δ : finset Σ, st' |= fold_right And Top Δ.
+
+      have f_sat : f_sat _S' Σ.
+
 Theorem HennesyMilner : _M ≡ _M' -> bisimilar _M _M'.
 
 End HennesyMilner.
