@@ -42,7 +42,10 @@ Notation "a ∈ b" := (Ensembles.In b a) (at level 60).
 Definition Forall {S} (s: S -> Prop) l := fold_right (fun a b=>s a /\ b) True l.
 Definition finset {S} (s: set S) : Type := {l : list S | Forall s l}.
 
-Program Definition empty_finset {S} {s: set S} : finset s := exist _ nil (I).
+Definition empty_finset {S} {s: set S} : finset s := exist _ nil I.
+Definition singleton_finset {S} {s: set S} x (p : s x) : finset s :=
+  exist _ (x::nil) (conj p I).
+
 Definition list_of {S} {s: set S} (l: finset s) : list S := proj1_sig l.
 
 Coercion list_of : finset >-> list.
@@ -163,8 +166,8 @@ Fixpoint satisfies (pm: pointed_model) (phi : form) : Prop :=
   | If phi1 phi2 => (satisfies pm phi1) -> (satisfies pm phi2)
   | And phi1 phi2 => (satisfies pm phi1) /\ (satisfies pm phi2)
   | DynDiam d phi =>
-    let fw := F d pm in
-    exists p', fw pm p' /\ satisfies p' phi
+    let fw := F d pm.(m_states) in
+    exists p', p' ∈ fw pm /\ satisfies p' phi
   end.
 
 Notation "p |= phi" := (satisfies p phi) (at level 30).
@@ -185,17 +188,18 @@ Definition state_model_relation : Type :=
 Variable Z : state_model_relation.
 
 Definition atomic_harmony : Prop :=
-  forall p p', Z p p' -> forall pr: prop, p.(st_val) p.(st_point) pr <-> p'.(st_val) p'.(st_point) pr.
+  forall p p', Z p p' -> forall pr: prop,
+      p.(st_val) p.(st_point) pr <-> p'.(st_val) p'.(st_point) pr.
 
 Definition f_zig (f : muf) : Prop :=
   forall p q p', Z p p' ->
-    f W p q ->
-    (exists q', f W' p' q' /\ Z q q').
+    q ∈ f W p ->
+    (exists q', q' ∈ f W' p' /\ Z q q').
 
 Definition f_zag (f : muf) : Prop :=
   forall p q' p', Z p p' ->
-    f W' p' q' ->
-    (exists q, f W p q /\ Z q q').
+    q' ∈ f W' p' ->
+    (exists q, q ∈ f W p /\ Z q q').
 
 Definition bisimulation : Prop :=
   atomic_harmony /\
@@ -322,11 +326,11 @@ Variable ϕ : form.
 
 Definition sat :=
   exists st : state_model _M.(m_states),
-    st ∈ _S -> forall ϕ : form, ϕ ∈ Σ ->
-    st |= ϕ.
+    st ∈ _S /\ (forall ϕ : form, ϕ ∈ Σ ->
+    st |= ϕ).
 
 Definition f_sat := forall Δ: finset Σ,
-  exists st : state_model _M, st ∈ _S ->
+  exists st : state_model _M, st ∈ _S /\
   Forall (fun ϕ : form=> st |= ϕ) Δ.
 
 End Satisfability.
@@ -452,22 +456,49 @@ Proof.
       move=>Δ.
       move: (sat_big_and'' Δ)=>[st' [infw' satΔ]].
       exists st'.
-      move=>in_S'.
+      split.
+      ** unfold _S'.
+         constructor; first by [].
+         by exists Δ.
+              **
       apply sat_fold_forall.
       by apply satΔ.
-    
+      **
       have f_sat'' : f_sat (f__W' ⟨ s', S', X' ⟩) Σ.
         unfold f_sat.
         move=>Δ.
-        move: (f_sat' Δ)=>[st' H].
+        move: (f_sat' Δ)=>[st' [ [H1 H2] H3]].
         exists st'.
-        move=>H'.
-        apply: H.
-        unfold _S'.
-        constructor.
-        auto.
-        exists empty_finset.
-        by [].
+        split; by [].
+     unfold saturation in M'_sat.
+     have sat' : sat (f__W' ⟨ s', S', X' ⟩) Σ
+       by apply: M'_sat.
+     case: sat'=>st' [inS H].
+     exists st'.
+     split.
+     * unfold f__W' in inS.
+       move: inS. unfold Ensembles.In.
+       admit. (* they're talking about different d's *)
+     * unfold weneedaname.
+       have tTY_img : ⟨ t, T, Y ⟩ ∈ image _M d.
+         admit.
+       have st_img : st' ∈ image _M' d.
+         admit.
+       split; last split. 
+       -- by [].
+       -- by [].
+       -- unfold equivalent.
+          move=>ϕ.
+          split.
+             move=>Ht.
+             apply: H.
+             by apply Ht.
+             
+             move=>Ht.
+             have classic : forall st ϕ, st |= ϕ \/ st |= ~' ϕ.
+               admit.
+             case: (classic  ⟨ t, T, Y ⟩ ϕ); first by [].
+             
 
 Theorem HennesyMilner : _M ≡ _M' -> bisimilar _M _M'.
 
