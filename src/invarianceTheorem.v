@@ -5,6 +5,8 @@ From Coq.Lists Require Import List.
 
 Require Import ssreflect.
 
+Set Bullet Behavior "None".
+
 Module Utilities. (* move to file! *)
 
 Obligation Tactic := idtac.
@@ -254,38 +256,34 @@ Proof.
   + rewrite !to_st_val !to_st_point ((get_HA bis) ?? HZ).
     tauto.
   + tauto.
-  + split;
-    intros HIf Hsat.
-    eapply (IHψ _M).
-    unfold bisimilar. eexists. split; eassumption.
-    apply HIf.
-    eapply (IHϕ _M).
-    unfold bisimilar. eexists. split; eassumption.
-    eassumption.
-
-    eapply (IHψ _M).
-    unfold bisimilar. eexists. split; eassumption.
-    apply HIf.
-    eapply (IHϕ _M).
-    unfold bisimilar. eexists. split; eassumption.
-    eassumption.
-
-  + split;
-    move=> [HIf Hsat].
-    split.
-    - eapply (IHϕ _M).
+  + split; intros HIf Hsat.
+    - eapply (IHψ _M).
       unfold bisimilar. eexists. split; eassumption.
       apply HIf.
-    -eapply (IHψ _M).
+      eapply (IHϕ _M).
       unfold bisimilar. eexists. split; eassumption.
       eassumption.
-    - split.
-      * eapply (IHϕ _M).
-        unfold bisimilar. eexists. split; eassumption.
-        apply HIf.
-      * eapply (IHψ _M).
-        unfold bisimilar. eexists. split; eassumption.
-        eassumption.
+
+    - eapply (IHψ _M).
+      unfold bisimilar. eexists. split; eassumption.
+      apply HIf.
+      eapply (IHϕ _M).
+      unfold bisimilar. eexists. split; eassumption.
+      eassumption.
+
+  + split; move=> [HIf Hsat]; split.
+    - eapply (IHϕ _M).
+      unfold bisimilar. eexists. split; eassumption.
+      by apply HIf.
+    - eapply (IHψ _M).
+      unfold bisimilar. eexists. split; eassumption.
+      eassumption.
+    - eapply (IHϕ _M).
+      unfold bisimilar. eexists. split; eassumption.
+      by apply HIf.
+    - eapply (IHψ _M).
+      unfold bisimilar. eexists. split; eassumption.
+      eassumption.
     
   + split; simpl.
     - intros [q [HfWpp' Hsatq]].
@@ -423,84 +421,86 @@ Proof.
     have sat_big_and0 :
       forall Δ : finset Σ, ⟨t, T, Y⟩ |= ⋀Δ.
     + case.
-      move=> l. simpl. elim: l=>[ |ϕ Δ IH] H.
-      -- by [].
-      -- simpl. simpl in H. case: H=>Hϕ HΔ.
-         by move/IH: HΔ {IH}.
-    + have sat_big_and :
-        forall Δ : finset Σ, ⟨s, S, X⟩ |= DynDiam ⋀Δ.
-      move=>Δ.
-      simpl.
+      move=> l. simpl.
+      elim: l=>[ |ϕ Δ IH] H.
+      * by [].
+      * simpl. simpl in H. case: H=>Hϕ HΔ.
+        by move/IH: HΔ {IH}.
+    have sat_big_and :
+      forall Δ : finset Σ, ⟨s, S, X⟩ |= DynDiam ⋀Δ.
+    + move=>Δ.
       eexists.
       split; first by eassumption.
       by apply sat_big_and0.
-      have sat_big_and' :
-        forall Δ : finset Σ, ⟨s', S', X'⟩ |= DynDiam ⋀Δ
+
+    have sat_big_and' :
+      forall Δ : finset Σ, ⟨s', S', X'⟩ |= DynDiam ⋀Δ
         by move=>Δ; apply/SeqS'.
-      have sat_big_and'' :
-        forall Δ : finset Σ, exists st', st' ∈ f__W' ⟨s', S', X'⟩ /\ st' |= ⋀Δ.
-      move=>Δ.
+
+    have sat_big_and'' :
+      forall Δ : finset Σ, exists st', st' ∈ f__W' ⟨s', S', X'⟩ /\ st' |= ⋀Δ.
+    + move=>Δ.
       move: (sat_big_and' Δ).
       simpl. move=>[st' [IH1 IH2]].
       exists st'.
       split; by assumption.
 
-      pose _S' : set (state_model _) :=
-        fun st' => st' ∈ f__W' ⟨ s', S', X' ⟩ /\
-                         exists Δ : finset Σ, st' |= ⋀Δ.
+    pose _S' : set (state_model _) :=
+      fun st' => st' ∈ f__W' ⟨ s', S', X' ⟩ /\
+              exists Δ : finset Σ, st' |= ⋀Δ.
 
-      have f_sat' : f_sat _S' Σ.
-      unfold f_sat.
+    have f_sat' : f_sat _S' Σ.
+    + unfold f_sat.
       move=>Δ.
       move: (sat_big_and'' Δ)=>[st' [infw' satΔ]].
       exists st'.
       split.
-      ** unfold _S'.
-         constructor; first by [].
-         by exists Δ.
-              **
-      apply sat_fold_forall.
-      by apply satΔ.
-      **
-      have f_sat'' : f_sat (f__W' ⟨ s', S', X' ⟩) Σ.
-        unfold f_sat.
-        move=>Δ.
-        move: (f_sat' Δ)=>[st' [ [H1 H2] H3]].
-        exists st'.
-        split; by [].
-     unfold saturation in M'_sat.
-     have sat' : sat (f__W' ⟨ s', S', X' ⟩) Σ
-       by apply: M'_sat.
-     case: sat'=>st' [inS H].
-     exists st'.
-     split.
-     * by [].
-     * unfold weneedaname.
-       have tTY_img : ⟨ t, T, Y ⟩ ∈ image _M.
-       apply: Union_intror.
-       eexists.
-       eassumption.
+      * unfold _S'.
+        split; first by [].
+        by exists Δ.
+      * apply sat_fold_forall.
+        by apply satΔ.
 
-       have st_img : st' ∈ image _M'.
-       apply: Union_intror.
-       eexists.
-       eassumption.
+    have f_sat'' : f_sat (f__W' ⟨ s', S', X' ⟩) Σ.
+    + unfold f_sat.
+      move=>Δ.
+      move: (f_sat' Δ)=>[st' [ [H1 H2] H3]].
+      exists st'.
+      split; by [].
 
-       split; last split. 
-       -- by [].
-       -- by [].
-       -- unfold equivalent.
-          move=>ϕ.
-          split.
-             move=>Ht.
-             apply: H.
-             by apply Ht.
+    unfold saturation in M'_sat.
+    have sat' : sat (f__W' ⟨ s', S', X' ⟩) Σ
+      by apply: M'_sat.
+    case: sat'=>st' [inS H].
+    exists st'.
+    split.
+    + by [].
+    + unfold weneedaname.
+      have tTY_img : ⟨ t, T, Y ⟩ ∈ image _M.
+      * apply: Union_intror.
+        eexists.
+        eassumption.
+
+      have st_img : st' ∈ image _M'.
+      * apply: Union_intror.
+        eexists.
+        eassumption.
+
+      split; last split. 
+      * by [].
+      * by [].
+      * unfold equivalent.
+        move=>ϕ.
+        split.
+        -- move=>Ht.
+           apply: H.
+           by apply: Ht.
              
-             move=>Ht.
-             have classic : forall st ϕ, st |= ϕ \/ st |= ~' ϕ.
-               admit.
-             case: (classic  ⟨ t, T, Y ⟩ ϕ); first by [].
-             
+        -- move=>Ht.
+           have classic : forall st ϕ, st |= ϕ \/ st |= ~' ϕ
+             by admit.
+           case: (classic  ⟨ t, T, Y ⟩ ϕ); first by [].
+  
 
 Theorem HennesyMilner : _M ≡ _M' -> bisimilar _M _M'.
 
