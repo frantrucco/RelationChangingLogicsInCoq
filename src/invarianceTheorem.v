@@ -352,23 +352,11 @@ Definition image_fw : set (state_model _M) :=
 
 Definition image := image_iden ∪ image_fw.
 
-(* Definition successors (w : _M) : state_model _M -> state_model _M -> Prop := *)
-(*   fun '{| st_point := _; st_rel := S1; st_val := X1 |} *)
-(*     '{| st_point := t; st_rel := S2; st_val := X2 |} => *)
-(*   S1 = S2 /\ X1 = X2 /\ S1 w t. *)
-
 Definition saturation :=
   forall (Σ : set form),
   forall st : state_model _M, st ∈ image ->
-
-    (* Saturation of every possible updated model *)
     (let _S := fw st in
-     f_sat _S Σ -> sat _S Σ)(*  /\ *)
-
-    (* (* Saturation of every successor *) *)
-    (* (forall w : _M, *)
-    (*  let _S := successors w st in *)
-    (*  f_sat _S Σ -> sat _S Σ) *).
+     f_sat _S Σ -> sat _S Σ).
 
 End Saturation.
 
@@ -501,9 +489,107 @@ Proof.
            fold (Σ (~' ϕ)).
            move/H => /= notϕ. apply notϕ in Ht.
            contradiction.
-  - 
+
+  - unfold f_zag. move=>[s S X] [t' T' Y'] [s' S' X'] /=.
+    move=>[imgS [imgS' SeqS']] t'T'Y'insSX.
+    set Σ : set form := (fun ϕ=> ⟨ t' , T' , Y' ⟩ |= ϕ).
+    have sat_big_and0 :
+      forall Δ : finset Σ, ⟨t', T', Y'⟩ |= ⋀Δ.
+    + case.
+      move=> l. simpl.
+      elim: l=>[ |ϕ Δ IH] H.
+      * by [].
+      * simpl. simpl in H. case: H=>Hϕ HΔ.
+        by move/IH: HΔ {IH}.
+    have sat_big_and' :
+      forall Δ : finset Σ, ⟨s', S', X'⟩ |= DynDiam ⋀Δ.
+    + move=>Δ.
+      eexists.
+      split; first by eassumption.
+      by apply sat_big_and0.
+
+    have sat_big_and :
+      forall Δ : finset Σ, ⟨s, S, X⟩ |= DynDiam ⋀Δ
+        by move=>Δ; apply/SeqS'.
+
+    have sat_big_and'' :
+      forall Δ : finset Σ, exists st, st ∈ f__W ⟨s, S, X⟩ /\ st |= ⋀Δ.
+    + move=>Δ.
+      move: (sat_big_and Δ).
+      simpl. move=>[st [IH1 IH2]].
+      exists st.
+      split; by assumption.
+
+    pose _S : set (state_model _) :=
+      fun st => st ∈ f__W ⟨ s, S, X ⟩ /\
+              exists Δ : finset Σ, st |= ⋀Δ.
+
+    have f_sat_S : f_sat _S Σ.
+    + unfold f_sat.
+      move=>Δ.
+      move: (sat_big_and'' Δ)=>[st [infw satΔ]].
+      exists st.
+      split.
+      * unfold _S.
+        split; first by [].
+        by exists Δ.
+      * apply sat_fold_forall.
+        by apply satΔ.
+
+    have f_sat_fw : f_sat (f__W ⟨ s, S, X ⟩) Σ.
+    + unfold f_sat.
+      move=>Δ.
+      move: (f_sat_S Δ)=>[st [ [H1 H2] H3]].
+      exists st.
+      split; by [].
+
+    unfold saturation in M_sat.
+    have sat_fw : sat (f__W ⟨ s, S, X ⟩) Σ
+      by apply: M_sat.
+    case: sat_fw=>st [inS H].
+    exists st.
+    split.
+    + by [].
+    + unfold weneedaname.
+      have tTY_img : ⟨ t', T', Y' ⟩ ∈ image _M'.
+      * apply: Union_intror.
+        eexists.
+        eassumption.
+
+      have st_img : st ∈ image _M.
+      * apply: Union_intror.
+        eexists.
+        eassumption.
+
+      do 2! (split; first by []).
+      unfold equivalent.
+      move=>ϕ.
+      split.
+      * move=>Ht.
+        case: (classic  ⟨ t', T', Y' ⟩ ϕ); first by [].
+        fold (Σ (~' ϕ)).
+        move/H => /= notϕ. apply notϕ in Ht.
+        contradiction.
+
+      * move=>Ht.
+        apply: H.
+        by apply: Ht.
+Qed.     
 
 Theorem HennesyMilner : _M ≡ _M' -> bisimilar _M _M'.
+Proof.
+  move=> Heq.
+  unfold bisimilar.
+  exists weneedaname.
+  split; first by apply weneedaname_bisimulation.
+  split; last split.
+  - apply: Union_introl.
+    rewrite /Ensembles.In /image_iden; tauto.
+  - apply: Union_introl.
+    rewrite /Ensembles.In /image_iden; tauto.
+  - move: _M _M' Heq => [ [W R V] /= w] [ [W' R' V'] /= w'].
+    by apply.
+Qed.
 
 End HennesyMilner.
 
