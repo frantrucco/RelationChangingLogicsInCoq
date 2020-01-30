@@ -394,7 +394,7 @@ Definition big_and Δ := fold_right And Top Δ.
 
 Notation "'⋀' Δ" := (big_and Δ) (at level 0).
 
-Axiom not_not: forall {ϕ : Prop}, ~ ~ ϕ -> ϕ.
+Axiom classic : forall st ϕ, st |= ϕ \/ st |= ~' ϕ.
 
 Lemma sat_fold_forall m Δ: 
   Forall (fun ϕ : form => m |= ϕ) Δ <-> m |= ⋀Δ.
@@ -497,10 +497,11 @@ Proof.
            by apply: Ht.
              
         -- move=>Ht.
-           have classic : forall st ϕ, st |= ϕ \/ st |= ~' ϕ
-             by admit.
            case: (classic  ⟨ t, T, Y ⟩ ϕ); first by [].
-  
+           fold (Σ (~' ϕ)).
+           move/H => /= notϕ. apply notϕ in Ht.
+           contradiction.
+  - 
 
 Theorem HennesyMilner : _M ≡ _M' -> bisimilar _M _M'.
 
