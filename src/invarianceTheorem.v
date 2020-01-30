@@ -42,29 +42,30 @@ Structure model := {
 
 Structure pointed_model := {
   pm_model :> model;
-  pm_point : pm_model
+  pm_point : pm_model.(m_states)
 }.
 
 Structure state_model (W: Set) := {
   st_point: W; st_rel: relation W; st_val: valuation W
 }.
 
-Notation "⟨ a , b , c ⟩" := {| st_point := a; st_val := c; st_rel := b |}.
+Notation "⟨ a , b , c ⟩" :=
+  {| st_point := a; st_val := c; st_rel := b |}.
+
+Notation "⟪ a , b , c ⟫, m" :=
+  {| pm_model := {| m_states := a; m_rel := b; m_val := c |};
+     pm_point := m |} (at level 0).
 
 Arguments st_point {W}.
 Arguments st_rel {W}.
 Arguments st_val {W}.
 
-Definition to_pm {W} (sm: state_model W) :=
-  {| pm_model := {| m_rel := sm.(st_rel); m_val := sm.(st_val) |};
-     pm_point := sm.(st_point) |}.
+Definition to_pm {W} (st: state_model W) :=
+  ⟪ _, st.(st_rel), st.(st_val) ⟫, (st.(st_point)).
 
 Coercion to_pm: state_model >-> pointed_model.
 
-Definition to_st (pm: pointed_model) :=
-  {| st_rel := pm.(m_rel);
-     st_val := pm.(m_val);
-     st_point := pm.(pm_point) |}.
+Definition to_st _M := ⟨_M.(pm_point), _M.(m_rel), _M.(m_val)⟩.
 
 Coercion to_st: pointed_model >-> state_model.
 
@@ -116,11 +117,10 @@ Notation "p ->' q" := (If p q)
 Notation "p <->' q" := (Iif p q)
                      (at level 95, right associativity).
 
-Notation "<o> d phi" := (DynDiam d phi)
-
+Notation "⬦ phi" := (DynDiam phi)
                         (at level 65, right associativity).
 
-Notation "[o] d phi" := (DynBox d phi)
+Notation "◻ phi" := (DynBox phi)
                         (at level 65, right associativity).
 
 (* Semantics *)
