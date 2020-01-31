@@ -4,6 +4,8 @@ From Coq.Relations Require Import Relations.
 From Coq.Lists Require Import List.
 From RCLIC Require Import utilities.
 
+Require Import Classical.
+
 Require Import ssreflect.
 
 (* This removes the requirement to have all goals with the same
@@ -86,6 +88,11 @@ Section InvarianceTheorem.
 (* Syntax *)
 Variable Dyn : Set.
 Variable d : Dyn.
+(* a b (a -> b) (~a \/ b) (a \/ b) (~(~a /\ ~b)) (~(a /\ ~b))  *)
+(* 0 0    1        1        0         0           1 *)
+(* 0 1    1        1        1         1           1 *)
+(* 1 0    0        0        1         1           0 *)
+(* 1 1    1        1        1         1           1 *)
 
 Inductive form : Set :=
   | Atom    : prop -> form
@@ -154,6 +161,12 @@ Fixpoint satisfies (pm: pointed_model) (phi : form) : Prop :=
   end.
 
 Notation "p |= phi" := (satisfies p phi) (at level 30).
+
+Theorem sat_classic : forall st ϕ, st |= ϕ \/ st |= ~' ϕ.
+Proof.
+  move=>st ϕ.
+  apply: classic.
+Qed.
 
 Definition equivalent (𝕸 𝕸': pointed_model) :=
   forall (ϕ: form), (𝕸 |= ϕ) <-> (𝕸' |= ϕ).
@@ -361,8 +374,6 @@ Definition big_and Δ := fold_right And Top Δ.
 
 Notation "'⋀' Δ" := (big_and Δ) (at level 0).
 
-Axiom classic : forall st ϕ, st |= ϕ \/ st |= ~' ϕ.
-
 Lemma sat_fold_forall m Δ: 
   Forall (fun ϕ : form => m |= ϕ) Δ <-> m |= ⋀Δ.
 Proof.
@@ -464,7 +475,7 @@ Proof.
            by apply: Ht.
              
         -- move=>Ht.
-           case: (classic  ⟨ t, T, Y ⟩ ϕ); first by [].
+           case: (sat_classic  ⟨ t, T, Y ⟩ ϕ); first by [].
            fold (Σ (~' ϕ)).
            move/H => /= notϕ. apply notϕ in Ht.
            contradiction.
@@ -545,7 +556,7 @@ Proof.
       move=>ϕ.
       split.
       * move=>Ht.
-        case: (classic  ⟨ t', T', Y' ⟩ ϕ); first by [].
+        case: (sat_classic ⟨ t', T', Y' ⟩ ϕ); first by [].
         fold (Σ (~' ϕ)).
         move/H => /= notϕ. apply notϕ in Ht.
         contradiction.
