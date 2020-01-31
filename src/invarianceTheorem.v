@@ -236,58 +236,44 @@ Theorem InvarianceUnderBisimulation :
   𝕸 ⇆ 𝕸' -> 𝕸 ≡ 𝕸'.
 
 Proof.
-Set Printing Coercions.
   move=> 𝕸 𝕸' bis ϕ.
   move: 𝕸 𝕸' bis.
-  induction ϕ as [prop | | ϕ IHϕ ψ IHψ | ϕ IH]; simpl;
-  intros 𝕸 𝕸' [Z [bis HZ]].
-  + rewrite !to_st_val !to_st_point ((get_HA bis) ?? HZ).
+  elim: ϕ => [prop | | ϕ IHϕ ψ IHψ | ϕ IH] /=
+            𝕸 𝕸'.
+  + move=> [Z [bis HZ]].
+    rewrite !to_st_val !to_st_point ((get_HA bis) ?? HZ).
     tauto.
   + tauto.
-  + split; intros HIf Hsat.
-    - eapply (IHψ 𝕸).
-      unfold bisimilar. eexists. split; eassumption.
+  + move=>bis.
+    split; move=> HIf Hsat.
+    - eapply (IHψ 𝕸); first eassumption.
       apply HIf.
-      eapply (IHϕ 𝕸).
-      unfold bisimilar. eexists. split; eassumption.
-      eassumption.
+      by eapply (IHϕ 𝕸); eassumption.
 
-    - eapply (IHψ 𝕸).
-      unfold bisimilar. eexists. split; eassumption.
+    - eapply (IHψ 𝕸); first eassumption.
       apply HIf.
-      eapply (IHϕ 𝕸).
-      unfold bisimilar. eexists. split; eassumption.
-      eassumption.
+      by eapply (IHϕ 𝕸).
  
-  + split; simpl.
-    - intros [q [HfWpp' Hsatq]].
-      eapply (get_Zig bis) in HfWpp'
+  + move=> [Z [bis HZ]]. 
+    split.
+ 
+    - move=> [q [HfWpp' Hsatq]].
+      apply (get_Zig bis _ _ _ HZ) in HfWpp'
           as [q' [HfW'q'p' HZqq']].
       eexists.
-      split.
-      * eassumption.
-      * eapply (IH (to_pm q)); last by eassumption.
-        unfold bisimilar.
-        eexists.
-        split; last first.
-        ++ rewrite !to_st_to_pm.
-           eassumption.
-        ++ assumption.
-      * assumption.
-    - intros [q' [HfWpp' Hsatq']].
-      eapply (get_Zag bis) in HfWpp'
+      split; first eassumption.
+      eapply (IH (to_pm q)); last by eassumption.
+      exists Z.
+      by rewrite !to_st_to_pm.
+      
+    - move=> [q' [HfWpp' Hsatq']].
+      eapply (get_Zag bis _ _ _ HZ) in HfWpp'
           as [q [HfWpq HZqq']].
       eexists.
-      split.
-      * eassumption.
-      * eapply (IH (to_pm q)); last by eassumption.
-        unfold bisimilar.
-        eexists.
-        split; last first.
-        ++ rewrite !to_st_to_pm.
-           eassumption.
-        ++ assumption.
-      * assumption.
+      split; first eassumption.
+      eapply (IH (to_pm q)); last by eassumption.
+      exists Z.
+      by rewrite !to_st_to_pm.
 Qed.
 
 Section Satisfability.
