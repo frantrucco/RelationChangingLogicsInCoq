@@ -88,17 +88,11 @@ Section InvarianceTheorem.
 (* Syntax *)
 Variable Dyn : Set.
 Variable d : Dyn.
-(* a b (a -> b) (~a \/ b) (a \/ b) (~(~a /\ ~b)) (~(a /\ ~b))  *)
-(* 0 0    1        1        0         0           1 *)
-(* 0 1    1        1        1         1           1 *)
-(* 1 0    0        0        1         1           0 *)
-(* 1 1    1        1        1         1           1 *)
 
 Inductive form : Set :=
   | Atom    : prop -> form
   | Bottom  : form
   | If      : form -> form -> form
-  | And     : form -> form -> form
   | DynDiam : form -> form.
 
 Coercion Atom : prop >-> form.
@@ -109,6 +103,9 @@ Definition Not (phi : form) : form :=
 
 Definition Top : form :=
   Not Bottom.
+
+Definition And (phi psi : form) : form :=
+  Not (If phi (Not psi)).
 
 Definition Or (phi psi : form) : form :=
   If (Not phi) psi.
@@ -154,7 +151,6 @@ Fixpoint satisfies (pm: pointed_model) (phi : form) : Prop :=
   | Atom a => pm.(m_val) pm.(pm_point) a
   | Bottom => False
   | If phi1 phi2 => (satisfies pm phi1) -> (satisfies pm phi2)
-  | And phi1 phi2 => (satisfies pm phi1) /\ (satisfies pm phi2)
   | DynDiam phi =>
     let fw := F d pm.(m_states) in
     exists p', p' ∈ fw pm /\ satisfies p' phi
@@ -243,7 +239,7 @@ Proof.
 Set Printing Coercions.
   move=> 𝕸 𝕸' bis ϕ.
   move: 𝕸 𝕸' bis.
-  induction ϕ as [prop | | ϕ IHϕ ψ IHψ | ϕ IHϕ ψ IHψ | ϕ IH]; simpl;
+  induction ϕ as [prop | | ϕ IHϕ ψ IHψ | ϕ IH]; simpl;
   intros 𝕸 𝕸' [Z [bis HZ]].
   + rewrite !to_st_val !to_st_point ((get_HA bis) ?? HZ).
     tauto.
@@ -262,21 +258,7 @@ Set Printing Coercions.
       eapply (IHϕ 𝕸).
       unfold bisimilar. eexists. split; eassumption.
       eassumption.
-
-  + split; move=> [HIf Hsat]; split.
-    - eapply (IHϕ 𝕸).
-      unfold bisimilar. eexists. split; eassumption.
-      by apply HIf.
-    - eapply (IHψ 𝕸).
-      unfold bisimilar. eexists. split; eassumption.
-      eassumption.
-    - eapply (IHϕ 𝕸).
-      unfold bisimilar. eexists. split; eassumption.
-      by apply HIf.
-    - eapply (IHψ 𝕸).
-      unfold bisimilar. eexists. split; eassumption.
-      eassumption.
-    
+ 
   + split; simpl.
     - intros [q [HfWpp' Hsatq]].
       eapply (get_Zig bis) in HfWpp'
@@ -403,7 +385,8 @@ Proof.
       elim: l=>[ |ϕ Δ IH] H.
       * by [].
       * simpl. simpl in H. case: H=>Hϕ HΔ.
-        by move/IH: HΔ {IH}.
+        move/IH: HΔ {IH}=>IH.
+        by apply.
     have sat_big_and :
       forall Δ : finset Σ, ⟨s, S, X⟩ |= DynDiam ⋀Δ.
     + move=>Δ.
@@ -490,7 +473,8 @@ Proof.
       elim: l=>[ |ϕ Δ IH] H.
       * by [].
       * simpl. simpl in H. case: H=>Hϕ HΔ.
-        by move/IH: HΔ {IH}.
+        move/IH: HΔ {IH}=>IH.
+        by apply.
     have sat_big_and' :
       forall Δ : finset Σ, ⟨s', S', X'⟩ |= DynDiam ⋀Δ.
     + move=>Δ.
