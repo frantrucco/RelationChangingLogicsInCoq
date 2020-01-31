@@ -27,6 +27,13 @@ End Sets.
 
 Module Tactics.
 
+Definition split_ands :=
+  mfix0 splits : gtactic unit :=
+    match_goal with
+    | [[? P Q |- P /\ Q]] => T.split;; T.try splits
+    end.
+Ltac split_ands := mrun split_ands.
+
 Obligation Tactic := idtac.
 Import M.notations.
 

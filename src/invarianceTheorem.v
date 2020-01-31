@@ -363,7 +363,7 @@ Qed.
 
 Lemma weneedaname_bisimulation : bisimulation weneedaname.
 Proof.
-  split; last split.
+  split_ands.
   - move=> s s' s_s' p.
     case: s_s' =>[s_img [s'_img seqs']].
     split; intro H.
@@ -442,7 +442,7 @@ Proof.
         eexists.
         eassumption.
 
-      split; last split. 
+      split_ands.
       * by [].
       * by [].
       * unfold equivalent.
@@ -550,7 +550,7 @@ Proof.
   unfold bisimilar.
   exists weneedaname.
   split; first by apply weneedaname_bisimulation.
-  split; last split.
+  split_ands.
   - apply: Union_introl.
     rewrite /Ensembles.In /image_iden; tauto.
   - apply: Union_introl.
@@ -562,6 +562,8 @@ Qed.
 End HennesyMilner.
 
 End InvarianceTheorem.
+
+
 (* Local Variables: *)
 (* company-coq-local-symbols: ( ("_M" . ?ℳ) ("_M'" . (?ℳ (Br . Bl) ?')) ("_S" . ?𝒮) ("_S'" . (?𝒮 (Br . Bl) ?')) ) *)
 (* End: *)
