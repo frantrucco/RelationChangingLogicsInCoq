@@ -267,10 +267,10 @@ Proof.
       by rewrite !to_st_to_pm.
       
     - move=> [q' [HfWpp' Hsatq']].
-      eapply (get_Zag bis _ _ _ HZ) in HfWpp'
+      apply (get_Zag bis _ _ _ HZ) in HfWpp'
           as [q [HfWpq HZqq']].
-      eexists.
-      split; first eassumption.
+      exists q.
+      split; first assumption.
       eapply (IH (to_pm q)); last by eassumption.
       exists Z.
       by rewrite !to_st_to_pm.
@@ -285,8 +285,7 @@ Variable ϕ : form.
 
 Definition sat :=
   exists st : state_model 𝕸.(m_states),
-    st ∈ 𝔖 /\ (forall ϕ : form, ϕ ∈ Σ ->
-    st |= ϕ).
+    st ∈ 𝔖 /\ (forall ϕ : form, ϕ ∈ Σ -> st |= ϕ).
 
 Definition f_sat := forall Δ: finset Σ,
   exists st : state_model 𝕸, st ∈ 𝔖 /\
@@ -303,20 +302,17 @@ Variable 𝕸 : model.
 Definition fw := F d 𝕸.
 
 Definition image_iden : set (state_model 𝕸) :=
-  fun (st : state_model 𝕸) =>
-  (st_rel st = m_rel 𝕸 /\ st_val st = m_val 𝕸).
+  fun st => st_rel st = m_rel 𝕸 /\ st_val st = m_val 𝕸.
 
 Definition image_fw : set (state_model 𝕸) := 
-  fun (st : state_model 𝕸) =>
-    (exists st': state_model 𝕸, st ∈ fw st').
+  fun st => exists st': state_model 𝕸, st ∈ fw st'.
 
 Definition image := image_iden ∪ image_fw.
 
 Definition saturation :=
-  forall (Σ : set form),
-  forall st : state_model 𝕸, st ∈ image ->
-    (let 𝔖 := fw st in
-     f_sat 𝔖 Σ -> sat 𝔖 Σ).
+  forall (Σ: set form) (st: state_model 𝕸),
+    st ∈ image -> let 𝔖 := fw st in
+                  f_sat 𝔖 Σ -> sat 𝔖 Σ.
 
 End Saturation.
 
@@ -356,7 +352,7 @@ Proof.
   split_ands.
   - move=> s s' s_s' p.
     case: s_s' =>[s_img [s'_img seqs']].
-    split; intro H.
+    split; move=> ?.
     + have sat : s |= p by assumption.
       by move/seqs': sat.
     + have sat : s' |= p by assumption.
