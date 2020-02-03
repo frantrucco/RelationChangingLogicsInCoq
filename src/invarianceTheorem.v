@@ -363,10 +363,9 @@ Proof.
     have sat_big_and0 :
       forall Δ : finset Σ, ⟨t, T, Y⟩ |= ⋀Δ.
     + case.
-      move=> l. simpl.
-      elim: l=>[ |ϕ Δ IH] H.
+      elim=>/= [ |ϕ Δ IH] H.
       * by [].
-      * simpl. simpl in H. case: H=>Hϕ HΔ.
+      * case: H=>Hϕ HΔ.
         move/IH: HΔ {IH}=>IH.
         by apply.
     have sat_big_and :
@@ -532,7 +531,7 @@ Proof.
         by apply: Ht.
 Qed.     
 
-Theorem HennesyMilner : 𝕸 ≡ 𝕸' -> 𝕸 ⇆ 𝕸'.
+Corollary HennesyMilner : 𝕸 ≡ 𝕸' -> 𝕸 ⇆ 𝕸'.
 Proof.
   move=> Heq.
   unfold bisimilar.
