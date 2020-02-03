@@ -357,179 +357,157 @@ Proof.
       by move/seqs': sat.
     + have sat : s' |= p by assumption.
       by move/seqs': sat.
+
   - move=>[s S X] [t T Y] [s' S' X'] /=.
     move=>[imgS [imgS' SeqS']] tTYinsSX.
     set Σ : set form := (fun ϕ=> ⟨ t , T , Y ⟩ |= ϕ).
-    have sat_big_and0 :
+
+    have sat_big_and :
       forall Δ : finset Σ, ⟨t, T, Y⟩ |= ⋀Δ.
     + case.
-      elim=>/= [ |ϕ Δ IH] H.
-      * by [].
-      * case: H=>Hϕ HΔ.
-        move/IH: HΔ {IH}=>IH.
-        by apply.
-    have sat_big_and :
-      forall Δ : finset Σ, ⟨s, S, X⟩ |= DynDiam ⋀Δ.
-    + move=>Δ.
-      eexists.
-      split; first by eassumption.
-      by apply sat_big_and0.
+      elim=>/= [ |ϕ Δ IH]; first by [].
+      case=>Hϕ. move/IH=> HΔ.
+      by apply.
 
-    have sat_big_and' :
-      forall Δ : finset Σ, ⟨s', S', X'⟩ |= DynDiam ⋀Δ
+    have sat_diamond_big_and :
+      forall Δ : finset Σ, ⟨s, S, X⟩ |= ⬦⋀Δ.
+    + move=>Δ.
+      exists ⟨t, T, Y⟩.
+      split; first by [].
+      by apply: sat_big_and.
+
+    have sat_diamond_big_and' :
+      forall Δ : finset Σ, ⟨s', S', X'⟩ |= ⬦⋀Δ
         by move=>Δ; apply/SeqS'.
 
-    have sat_big_and'' :
+    have sat_next_big_and' :
       forall Δ : finset Σ, exists st', st' ∈ f__W' ⟨s', S', X'⟩ /\ st' |= ⋀Δ.
     + move=>Δ.
-      move: (sat_big_and' Δ).
-      simpl. move=>[st' [IH1 IH2]].
-      exists st'.
-      split; by assumption.
-
+      move: (sat_diamond_big_and' Δ) => [st' [IH1 IH2]].
+      by exists st'.
+      
     pose 𝔖' : set (state_model _) :=
       fun st' => st' ∈ f__W' ⟨ s', S', X' ⟩ /\
               exists Δ : finset Σ, st' |= ⋀Δ.
 
-    have f_sat' : f_sat 𝔖' Σ.
-    + unfold f_sat.
-      move=>Δ.
-      move: (sat_big_and'' Δ)=>[st' [infw' satΔ]].
+    have 𝔖'_fsat : f_sat 𝔖' Σ.
+    + move=>Δ.
+      move: (sat_next_big_and' Δ)=>[st' [infw' satΔ]].
       exists st'.
-      split.
-      * unfold 𝔖'.
-        split; first by [].
-        by exists Δ.
-      * apply sat_fold_forall.
-        by apply satΔ.
-
-    have f_sat'' : f_sat (f__W' ⟨ s', S', X' ⟩) Σ.
-    + unfold f_sat.
-      move=>Δ.
-      move: (f_sat' Δ)=>[st' [ [H1 H2] H3]].
-      exists st'.
-      split; by [].
-
-    unfold saturation in M'_sat.
-    have sat' : sat (f__W' ⟨ s', S', X' ⟩) Σ
-      by apply: M'_sat.
-    case: sat'=>st' [inS H].
-    exists st'.
-    split.
-    + by [].
-    + unfold equiv_in_image.
-      have tTY_img : ⟨ t, T, Y ⟩ ∈ image 𝕸.
-      * apply: Union_intror.
-        eexists.
-        eassumption.
-
-      have st_img : st' ∈ image 𝕸'.
-      * apply: Union_intror.
-        eexists.
-        eassumption.
-
       split_ands.
       * by [].
-      * by [].
-      * unfold equivalent.
-        move=>ϕ.
-        split.
-        -- move=>Ht.
-           apply: H.
-           by apply: Ht.
-             
-        -- move=>Ht.
-           case: (sat_classic  ⟨ t, T, Y ⟩ ϕ); first by [].
-           fold (Σ (~' ϕ)).
-           move/H => /= notϕ. apply notϕ in Ht.
-           contradiction.
+      * by exists Δ.
+      * by apply sat_fold_forall.
 
-  - unfold f_zag. move=>[s S X] [t' T' Y'] [s' S' X'] /=.
+    have fw'_fsat : f_sat (f__W' ⟨ s', S', X' ⟩) Σ.
+    + move=>Δ.
+      move: (𝔖'_fsat Δ)=>[st' [ [ ? ?] ?]].
+      by exists st'.
+
+    have fw'_sat : sat (f__W' ⟨ s', S', X' ⟩) Σ
+      by apply: M'_sat.
+
+    case: fw'_sat=>st' [inS H].
+    exists st'.
+    split; first by [].
+    have tTY_img : ⟨ t, T, Y ⟩ ∈ image 𝕸.
+    + apply: Union_intror.
+      eexists.
+      eassumption.
+
+    have st_img : st' ∈ image 𝕸'.
+    + apply: Union_intror.
+      eexists.
+      eassumption.
+
+    split_ands; try by [].
+    move=>ϕ.
+    split.
+    + move=>Ht.
+      apply: H.
+      by apply: Ht.
+             
+    + case: (sat_classic  ⟨ t, T, Y ⟩ ϕ); first by [].
+      fold (Σ (~' ϕ)).
+      move/H => sat_notϕ sat_ϕ.
+      apply sat_notϕ in sat_ϕ.
+      contradiction.
+
+  - move=>[s S X] [t' T' Y'] [s' S' X'] /=.
     move=>[imgS [imgS' SeqS']] t'T'Y'insSX.
     set Σ : set form := (fun ϕ=> ⟨ t' , T' , Y' ⟩ |= ϕ).
-    have sat_big_and0 :
+
+    have sat_big_and' :
       forall Δ : finset Σ, ⟨t', T', Y'⟩ |= ⋀Δ.
     + case.
-      move=> l. simpl.
-      elim: l=>[ |ϕ Δ IH] H.
-      * by [].
-      * simpl. simpl in H. case: H=>Hϕ HΔ.
-        move/IH: HΔ {IH}=>IH.
-        by apply.
-    have sat_big_and' :
-      forall Δ : finset Σ, ⟨s', S', X'⟩ |= DynDiam ⋀Δ.
-    + move=>Δ.
-      eexists.
-      split; first by eassumption.
-      by apply sat_big_and0.
+      elim=> /= [ |ϕ Δ IH]; first by [].
+      case=>Hϕ. move/IH=> HΔ.
+      by apply.
 
-    have sat_big_and :
-      forall Δ : finset Σ, ⟨s, S, X⟩ |= DynDiam ⋀Δ
+    have sat_diamond_big_and' :
+      forall Δ : finset Σ, ⟨s', S', X'⟩ |= ⬦⋀Δ.
+    + move=>Δ.
+      exists ⟨t', T', Y'⟩.
+      split; first by [].
+      by apply: sat_big_and'.
+
+    have sat_diamond_big_and :
+      forall Δ : finset Σ, ⟨s, S, X⟩ |= ⬦⋀Δ
         by move=>Δ; apply/SeqS'.
 
-    have sat_big_and'' :
+    have sat_next_big_and :
       forall Δ : finset Σ, exists st, st ∈ f__W ⟨s, S, X⟩ /\ st |= ⋀Δ.
     + move=>Δ.
-      move: (sat_big_and Δ).
-      simpl. move=>[st [IH1 IH2]].
-      exists st.
-      split; by assumption.
+      move: (sat_diamond_big_and Δ)=> /= [st [IH1 IH2]].
+      by exists st.
 
     pose 𝔖 : set (state_model _) :=
       fun st => st ∈ f__W ⟨ s, S, X ⟩ /\
               exists Δ : finset Σ, st |= ⋀Δ.
 
-    have f_sat𝔖 : f_sat 𝔖 Σ.
-    + unfold f_sat.
-      move=>Δ.
-      move: (sat_big_and'' Δ)=>[st [infw satΔ]].
+    have 𝔖_fsat : f_sat 𝔖 Σ.
+    + move=>Δ.
+      move: (sat_next_big_and Δ)=>[st [infw satΔ]].
       exists st.
-      split.
-      * unfold 𝔖.
-        split; first by [].
-        by exists Δ.
-      * apply sat_fold_forall.
-        by apply satΔ.
+      split_ands.
+      * by [].
+      * by exists Δ.
+      * by apply sat_fold_forall.
 
-    have f_sat_fw : f_sat (f__W ⟨ s, S, X ⟩) Σ.
-    + unfold f_sat.
-      move=>Δ.
-      move: (f_sat𝔖 Δ)=>[st [ [H1 H2] H3]].
-      exists st.
-      split; by [].
+    have fw_fsat : f_sat (f__W ⟨ s, S, X ⟩) Σ.
+    + move=>Δ.
+      move: (𝔖_fsat Δ)=>[st [ [ ? ?] ?]].
+      by exists st.
 
-    unfold saturation in M_sat.
-    have sat_fw : sat (f__W ⟨ s, S, X ⟩) Σ
+    have fw_sat : sat (f__W ⟨ s, S, X ⟩) Σ
       by apply: M_sat.
-    case: sat_fw=>st [inS H].
+
+    case: fw_sat=>st [inS H].
     exists st.
+    split; first by [].
+    have tTY_img : ⟨ t', T', Y' ⟩ ∈ image 𝕸'.
+    + apply: Union_intror.
+      eexists.
+      eassumption.
+
+    have st_img : st ∈ image 𝕸.
+    + apply: Union_intror.
+      eexists.
+      eassumption.
+
+    split_ands; try by [].
+    move=>ϕ.
     split.
-    + by [].
-    + unfold equiv_in_image.
-      have tTY_img : ⟨ t', T', Y' ⟩ ∈ image 𝕸'.
-      * apply: Union_intror.
-        eexists.
-        eassumption.
+    + case: (sat_classic ⟨ t', T', Y' ⟩ ϕ); first by [].
+      fold (Σ (~' ϕ)).
+      move/H => sat_notϕ sat_ϕ.
+      apply sat_notϕ in sat_ϕ.
+      contradiction.
 
-      have st_img : st ∈ image 𝕸.
-      * apply: Union_intror.
-        eexists.
-        eassumption.
-
-      do 2! (split; first by []).
-      unfold equivalent.
-      move=>ϕ.
-      split.
-      * move=>Ht.
-        case: (sat_classic ⟨ t', T', Y' ⟩ ϕ); first by [].
-        fold (Σ (~' ϕ)).
-        move/H => /= notϕ. apply notϕ in Ht.
-        contradiction.
-
-      * move=>Ht.
-        apply: H.
-        by apply: Ht.
-Qed.     
+    + move=>Ht.
+      apply: H.
+      by apply: Ht.
+Qed.
 
 Corollary HennesyMilner : 𝕸 ≡ 𝕸' -> 𝕸 ⇆ 𝕸'.
 Proof.
