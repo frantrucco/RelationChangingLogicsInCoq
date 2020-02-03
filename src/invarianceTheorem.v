@@ -133,10 +133,10 @@ Notation "p ->' q" := (If p q)
 Notation "p <->' q" := (Iif p q)
                      (at level 95, right associativity).
 
-Notation "⬦ phi" := (DynDiam phi)
+Notation "⃟ phi" := (DynDiam phi)
                         (at level 65, right associativity).
 
-Notation "◻ phi" := (DynBox phi)
+Notation "⃞ phi" := (DynBox phi)
                         (at level 65, right associativity).
 
 (* Semantics *)
@@ -146,23 +146,20 @@ Definition muf : Type := forall (W : Set),
 
 Variable F : Dyn -> muf.
 
-Fixpoint satisfies (pm: pointed_model) (phi : form) : Prop :=
-  match phi with
+Fixpoint satisfies (pm: pointed_model) (ϕ : form) : Prop :=
+  match ϕ with
   | Atom a => pm.(m_val) pm.(pm_point) a
   | Bottom => False
-  | If phi1 phi2 => (satisfies pm phi1) -> (satisfies pm phi2)
-  | DynDiam phi =>
+  | ϕ1 ->' ϕ2 => (satisfies pm ϕ1) -> (satisfies pm ϕ2)
+  | ⃟ϕ =>
     let fw := F d pm.(m_states) in
-    exists p', p' ∈ fw pm /\ satisfies p' phi
+    exists p', p' ∈ fw pm /\ satisfies p' ϕ
   end.
 
-Notation "p |= phi" := (satisfies p phi) (at level 30).
+Notation "p |= ϕ" := (satisfies p ϕ) (at level 30).
 
 Theorem sat_classic : forall st ϕ, st |= ϕ \/ st |= ~' ϕ.
-Proof.
-  move=>st ϕ.
-  apply: classic.
-Qed.
+Proof. by move=>*; apply: classic. Qed.
 
 Definition equivalent (𝕸 𝕸': pointed_model) :=
   forall (ϕ: form), (𝕸 |= ϕ) <-> (𝕸' |= ϕ).
@@ -230,7 +227,7 @@ Defined.
 
 End Getters.
 
-(* Main Theorem *)
+
 Theorem InvarianceUnderBisimulation :
   forall 𝕸 𝕸' : pointed_model,
   𝕸 ⇆ 𝕸' -> 𝕸 ≡ 𝕸'.
@@ -239,7 +236,7 @@ Proof.
   move=> 𝕸 𝕸' bis ϕ.
   move: 𝕸 𝕸' bis.
   elim: ϕ => [prop | | ϕ IHϕ ψ IHψ | ϕ IH] /=
-            𝕸 𝕸'.
+             𝕸 𝕸'.
   + move=> [Z [bis HZ]].
     rewrite !to_st_val !to_st_point ((get_HA bis) ?? HZ).
     tauto.
@@ -260,9 +257,9 @@ Proof.
     - move=> [q [HfWpp' Hsatq]].
       apply (get_Zig bis _ _ _ HZ) in HfWpp'
           as [q' [HfW'q'p' HZqq']].
-      eexists.
-      split; first eassumption.
-      eapply (IH (to_pm q)); last by eassumption.
+      exists q'.
+      split; first by [].
+      apply (IH (to_pm q)); last by [].
       exists Z.
       by rewrite !to_st_to_pm.
       
@@ -270,7 +267,7 @@ Proof.
       apply (get_Zag bis _ _ _ HZ) in HfWpp'
           as [q [HfWpq HZqq']].
       exists q.
-      split; first assumption.
+      split; first by [].
       eapply (IH (to_pm q)); last by eassumption.
       exists Z.
       by rewrite !to_st_to_pm.
@@ -370,14 +367,14 @@ Proof.
       by apply.
 
     have sat_diamond_big_and :
-      forall Δ : finset Σ, ⟨s, S, X⟩ |= ⬦⋀Δ.
+      forall Δ : finset Σ, ⟨s, S, X⟩ |= ⃟⋀Δ.
     + move=>Δ.
       exists ⟨t, T, Y⟩.
       split; first by [].
       by apply: sat_big_and.
 
     have sat_diamond_big_and' :
-      forall Δ : finset Σ, ⟨s', S', X'⟩ |= ⬦⋀Δ
+      forall Δ : finset Σ, ⟨s', S', X'⟩ |= ⃟⋀Δ
         by move=>Δ; apply/SeqS'.
 
     have sat_next_big_and' :
@@ -445,14 +442,14 @@ Proof.
       by apply.
 
     have sat_diamond_big_and' :
-      forall Δ : finset Σ, ⟨s', S', X'⟩ |= ⬦⋀Δ.
+      forall Δ : finset Σ, ⟨s', S', X'⟩ |= ⃟⋀Δ.
     + move=>Δ.
       exists ⟨t', T', Y'⟩.
       split; first by [].
       by apply: sat_big_and'.
 
     have sat_diamond_big_and :
-      forall Δ : finset Σ, ⟨s, S, X⟩ |= ⬦⋀Δ
+      forall Δ : finset Σ, ⟨s, S, X⟩ |= ⃟⋀Δ
         by move=>Δ; apply/SeqS'.
 
     have sat_next_big_and :
