@@ -34,7 +34,7 @@ Inductive prop : Set :=
   p : nat -> prop.
 
 (* Valuation function *)
-Definition valuation (W: Set) : Type := set (W * prop).
+Definition valuation (W: Set) : Type := set (prop * W).
 
 Structure model := {
   m_states :> Set;
@@ -145,17 +145,18 @@ Definition muf : Type := forall (W : Set),
 
 Variable F : Dyn -> muf.
 
-Fixpoint satisfies (pm: pointed_model) (ϕ : form) : Prop :=
-  match ϕ with
-  | Atom a => pm.(m_val) (pm.(pm_point), a)
-  | Bottom => False
-  | ϕ1 ->' ϕ2 => (satisfies pm ϕ1) -> (satisfies pm ϕ2)
-  | ⃟ϕ =>
-    let fw := F d pm.(m_states) in
-    exists p', p' ∈ fw pm /\ satisfies p' ϕ
-  end.
+Reserved Notation "p |= ϕ" (at level 30).
 
-Notation "p |= ϕ" := (satisfies p ϕ) (at level 30).
+Fixpoint satisfies (𝔐: pointed_model) (ϕ : form) : Prop :=
+  match ϕ with
+  | Atom a => 𝔐.(m_val) (a, 𝔐.(pm_point))
+  | Bottom => False
+  | ϕ1 ->' ϕ2 => (𝔐 |= ϕ1) -> (𝔐 |= ϕ2)
+  | ⃟ϕ =>
+    let fw := F d 𝔐.(m_states) in
+    exists p', p' ∈ fw 𝔐  /\  p' |= ϕ
+  end
+where "p |= ϕ" := (satisfies p ϕ).
 
 Theorem sat_classic : forall st ϕ, st |= ϕ \/ st |= ~' ϕ.
 Proof. by move=>*; apply: classic. Qed.
@@ -177,7 +178,7 @@ Context (Z : state_model_relation).
 
 Definition atomic_harmony : Prop :=
   forall p p', Z p p' -> forall pr: prop,
-      p.(st_val) (p.(st_point), pr) <-> p'.(st_val) (p'.(st_point), pr).
+      p.(st_val) (pr, p.(st_point)) <-> p'.(st_val) (pr, p'.(st_point)).
 
 Definition f_zig (f : muf) : Prop :=
   forall p q p', Z p p' ->
