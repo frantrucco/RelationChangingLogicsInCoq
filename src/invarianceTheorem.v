@@ -97,46 +97,43 @@ Inductive form : Set :=
 
 Coercion Atom : prop >-> form.
 
-(* Syntactic sugar *)
-Definition Not (phi : form) : form :=
-  If phi Bottom.
-
-Definition Top : form :=
-  Not Bottom.
-
-Definition And (phi psi : form) : form :=
-  Not (If phi (Not psi)).
-
-Definition Or (phi psi : form) : form :=
-  If (Not phi) psi.
-
-Definition Iif (phi psi : form) : form :=
-  And (If phi psi) (If psi phi).
-
-Definition DynBox (phi : form) : form :=
-  Not (DynDiam (Not phi)).
-
-(* Notation *)
-
-Notation "p /\' q" := (And p q)
-                     (at level 80, right associativity).
-
-Notation "p \/' q" := (Or p q)
-                     (at level 85, right associativity).
-
-Notation "~' p" := (Not p)
-                   (at level 70, right associativity).
+(* Basic notation *)
+Notation "⊥'" := Bottom.
 
 Notation "p ->' q" := (If p q)
                      (at level 90, right associativity).
 
+Notation "⃟ ϕ" := (DynDiam ϕ)
+                        (at level 65, right associativity).
+
+(* Syntactic sugar *)
+Definition Not (ϕ : form) : form := ϕ ->' ⊥'.
+
+Notation "~' p" := (Not p)
+                   (at level 70, right associativity).
+
+Definition Top : form := ~'⊥'.
+
+Notation "⊤'" := Top.
+
+Definition And (ϕ ψ : form) : form := ~' (ϕ ->' ~'ψ).
+
+Notation "p /\' q" := (And p q)
+                     (at level 80, right associativity).
+
+Definition Or (ϕ ψ : form) : form := ~'ϕ ->' ψ.
+
+Notation "p \/' q" := (Or p q)
+                     (at level 85, right associativity).
+
+Definition Iif (ϕ ψ : form) : form := (ϕ ->' ψ) /\' (ψ ->' ϕ).
+
 Notation "p <->' q" := (Iif p q)
                      (at level 95, right associativity).
 
-Notation "⃟ phi" := (DynDiam phi)
-                        (at level 65, right associativity).
+Definition DynBox (ϕ : form) : form := ~'⃟ ~'ϕ.
 
-Notation "⃞ phi" := (DynBox phi)
+Notation "⃞ ϕ" := (DynBox ϕ)
                         (at level 65, right associativity).
 
 (* Semantics *)
