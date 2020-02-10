@@ -34,7 +34,7 @@ Inductive prop : Set :=
   p : nat -> prop.
 
 (* Valuation function *)
-Definition valuation (W: Set) : Type := W -> prop -> Prop.
+Definition valuation (W: Set) : Type := set (W * prop).
 
 Structure model := {
   m_states :> Set;
@@ -44,11 +44,13 @@ Structure model := {
 
 Structure pointed_model := {
   pm_model :> model;
-  pm_point : pm_model.(m_states)
+  pm_point : pm_model
 }.
 
 Structure state_model (W: Set) := {
-  st_point: W; st_rel: relation W; st_val: valuation W
+  st_point: W;
+  st_rel: relation W;
+  st_val: valuation W
 }.
 
 Notation "⟨ a , b , c ⟩" :=
@@ -145,7 +147,7 @@ Variable F : Dyn -> muf.
 
 Fixpoint satisfies (pm: pointed_model) (ϕ : form) : Prop :=
   match ϕ with
-  | Atom a => pm.(m_val) pm.(pm_point) a
+  | Atom a => pm.(m_val) (pm.(pm_point), a)
   | Bottom => False
   | ϕ1 ->' ϕ2 => (satisfies pm ϕ1) -> (satisfies pm ϕ2)
   | ⃟ϕ =>
@@ -175,7 +177,7 @@ Context (Z : state_model_relation).
 
 Definition atomic_harmony : Prop :=
   forall p p', Z p p' -> forall pr: prop,
-      p.(st_val) p.(st_point) pr <-> p'.(st_val) p'.(st_point) pr.
+      p.(st_val) (p.(st_point), pr) <-> p'.(st_val) (p'.(st_point), pr).
 
 Definition f_zig (f : muf) : Prop :=
   forall p q p', Z p p' ->
