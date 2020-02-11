@@ -69,15 +69,15 @@ Definition to_pm {W} (st: state_model W) :=
 
 Coercion to_pm: state_model >-> pointed_model.
 
-Definition to_st 𝕸 := ⟨𝕸.(pm_point), 𝕸.(m_rel), 𝕸.(m_val)⟩.
+Definition to_st 𝔐 := ⟨𝔐.(pm_point), 𝔐.(m_rel), 𝔐.(m_val)⟩.
 
 Coercion to_st: pointed_model >-> state_model.
 
-Lemma to_st_val (𝕸: pointed_model) : m_val 𝕸 = st_val 𝕸.
+Lemma to_st_val (𝔐: pointed_model) : m_val 𝔐 = st_val 𝔐.
   by [].
 Qed.
 
-Lemma to_st_point (𝕸: pointed_model) : pm_point 𝕸 = st_point 𝕸.
+Lemma to_st_point (𝔐: pointed_model) : pm_point 𝔐 = st_point 𝔐.
   by [].
 Qed.
 
@@ -161,8 +161,8 @@ where "p |= ϕ" := (satisfies p ϕ).
 Theorem sat_classic : forall st ϕ, st |= ϕ \/ st |= ~' ϕ.
 Proof. by move=>*; apply: classic. Qed.
 
-Definition equivalent (𝕸 𝕸': pointed_model) :=
-  forall (ϕ: form), (𝕸 |= ϕ) <-> (𝕸' |= ϕ).
+Definition equivalent (𝔐 𝔐': pointed_model) :=
+  forall (ϕ: form), (𝔐 |= ϕ) <-> (𝔐' |= ϕ).
 
 Notation "m ≡ m'" := (equivalent m m') (at level 0).
 
@@ -196,8 +196,8 @@ Definition bisimulation : Prop :=
 
 End Bisimulation.
 
-Definition bisimilar (𝕸 𝕸': pointed_model) : Prop :=
-  exists Z, bisimulation Z /\ Z 𝕸 𝕸'.
+Definition bisimilar (𝔐 𝔐': pointed_model) : Prop :=
+  exists Z, bisimulation Z /\ Z 𝔐 𝔐'.
 
 Notation "𝔐 ⇆ 𝔐'" := (bisimilar 𝔐 𝔐') (at level 30).
 
@@ -229,27 +229,27 @@ End Getters.
 
 
 Theorem InvarianceUnderBisimulation :
-  forall 𝕸 𝕸' : pointed_model,
-  𝕸 ⇆ 𝕸' -> 𝕸 ≡ 𝕸'.
+  forall 𝔐 𝔐' : pointed_model,
+  𝔐 ⇆ 𝔐' -> 𝔐 ≡ 𝔐'.
 
 Proof.
-  move=> 𝕸 𝕸' bis ϕ.
-  move: 𝕸 𝕸' bis.
+  move=> 𝔐 𝔐' bis ϕ.
+  move: 𝔐 𝔐' bis.
   elim: ϕ => [prop | | ϕ IHϕ ψ IHψ | ϕ IH] /=
-             𝕸 𝕸'.
+             𝔐 𝔐'.
   + move=> [Z [bis HZ]].
     rewrite !to_st_val !to_st_point ((get_HA bis) ?? HZ).
     tauto.
   + tauto.
   + move=>bis.
     split; move=> HIf Hsat.
-    - eapply (IHψ 𝕸); first eassumption.
+    - eapply (IHψ 𝔐); first eassumption.
       apply HIf.
-      by eapply (IHϕ 𝕸); eassumption.
+      by eapply (IHϕ 𝔐); eassumption.
 
-    - eapply (IHψ 𝕸); first eassumption.
+    - eapply (IHψ 𝔐); first eassumption.
       apply HIf.
-      by eapply (IHϕ 𝕸).
+      by eapply (IHϕ 𝔐).
  
   + move=> [Z [bis HZ]]. 
     split.
@@ -275,17 +275,17 @@ Qed.
 
 Section Satisfability.
 
-Variable 𝕸 : model.
-Variable 𝔖 : set (state_model 𝕸.(m_states)).
+Variable 𝔐 : model.
+Variable 𝔖 : set (state_model 𝔐.(m_states)).
 Variable Σ : set form.
 Variable ϕ : form.
 
 Definition sat :=
-  exists st : state_model 𝕸.(m_states),
+  exists st : state_model 𝔐.(m_states),
     st ∈ 𝔖 /\ (forall ϕ : form, ϕ ∈ Σ -> st |= ϕ).
 
 Definition f_sat := forall Δ: finset Σ,
-  exists st : state_model 𝕸, st ∈ 𝔖 /\
+  exists st : state_model 𝔐, st ∈ 𝔖 /\
   Forall (fun ϕ : form=> st |= ϕ) Δ.
 
 End Satisfability.
@@ -295,19 +295,19 @@ Arguments f_sat {_}.
 
 Section Saturation.
 
-Variable 𝕸 : model.
-Definition fw := F d 𝕸.
+Variable 𝔐 : model.
+Definition fw := F d 𝔐.
 
-Definition image_iden : set (state_model 𝕸) :=
-  fun st => st_rel st = m_rel 𝕸 /\ st_val st = m_val 𝕸.
+Definition image_iden : set (state_model 𝔐) :=
+  fun st => st_rel st = m_rel 𝔐 /\ st_val st = m_val 𝔐.
 
-Definition image_fw : set (state_model 𝕸) := 
-  fun st => exists st': state_model 𝕸, st ∈ fw st'.
+Definition image_fw : set (state_model 𝔐) := 
+  fun st => exists st': state_model 𝔐, st ∈ fw st'.
 
 Definition image := image_iden ∪ image_fw.
 
 Definition saturation :=
-  forall (Σ: set form) (st: state_model 𝕸),
+  forall (Σ: set form) (st: state_model 𝔐),
     st ∈ image -> let 𝔖 := fw st in
                   f_sat 𝔖 Σ -> sat 𝔖 Σ.
 
@@ -315,18 +315,18 @@ End Saturation.
 
 Section HennesyMilner.
 
-Variable 𝕸 : pointed_model.
-Variable 𝕸' : pointed_model.
+Variable 𝔐 : pointed_model.
+Variable 𝔐' : pointed_model.
 
-Hypothesis M_sat : saturation 𝕸.
-Hypothesis M'_sat : saturation 𝕸'.
+Hypothesis M_sat : saturation 𝔐.
+Hypothesis M'_sat : saturation 𝔐'.
 
-Let f__W := F d 𝕸.
-Let f__W' := F d 𝕸'.
+Let f__W := F d 𝔐.
+Let f__W' := F d 𝔐'.
 
 Definition equiv_in_image st st' :=
-    st ∈ image 𝕸 /\
-    st' ∈ image 𝕸' /\
+    st ∈ image 𝔐 /\
+    st' ∈ image 𝔐' /\
     st ≡ st'.
 
 Notation "a ↭ b" := (equiv_in_image a b) (at level 40).
@@ -407,12 +407,12 @@ Proof.
     case: fw'_sat=>st' [inS H].
     exists st'.
     split; first by [].
-    have tTY_img : ⟨ t, T, Y ⟩ ∈ image 𝕸.
+    have tTY_img : ⟨ t, T, Y ⟩ ∈ image 𝔐.
     + apply: Union_intror.
       eexists.
       eassumption.
 
-    have st_img : st' ∈ image 𝕸'.
+    have st_img : st' ∈ image 𝔐'.
     + apply: Union_intror.
       eexists.
       eassumption.
@@ -482,12 +482,12 @@ Proof.
     case: fw_sat=>st [inS H].
     exists st.
     split; first by [].
-    have tTY_img : ⟨ t', T', Y' ⟩ ∈ image 𝕸'.
+    have tTY_img : ⟨ t', T', Y' ⟩ ∈ image 𝔐'.
     + apply: Union_intror.
       eexists.
       eassumption.
 
-    have st_img : st ∈ image 𝕸.
+    have st_img : st ∈ image 𝔐.
     + apply: Union_intror.
       eexists.
       eassumption.
@@ -506,7 +506,7 @@ Proof.
       by apply: Ht.
 Qed.
 
-Corollary HennesyMilner : 𝕸 ≡ 𝕸' -> 𝕸 ⇆ 𝕸'.
+Corollary HennesyMilner : 𝔐 ≡ 𝔐' -> 𝔐 ⇆ 𝔐'.
 Proof.
   move=> Heq.
   unfold bisimilar.
@@ -517,7 +517,7 @@ Proof.
     rewrite /Ensembles.In /image_iden; tauto.
   - apply: Union_introl.
     rewrite /Ensembles.In /image_iden; tauto.
-  - move: 𝕸 𝕸' Heq => [ [W R V] /= w] [ [W' R' V'] /= w'].
+  - move: 𝔐 𝔐' Heq => [ [W R V] /= w] [ [W' R' V'] /= w'].
     by apply.
 Qed.
 
