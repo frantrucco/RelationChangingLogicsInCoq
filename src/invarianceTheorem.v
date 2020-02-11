@@ -149,7 +149,7 @@ Reserved Notation "p |= ϕ" (at level 30).
 
 Fixpoint satisfies (𝔐: pointed_model) (ϕ : form) : Prop :=
   match ϕ with
-  | Atom a => 𝔐.(m_val) (a, 𝔐.(pm_point))
+  | Atom a => (a, 𝔐.(pm_point)) ∈ 𝔐.(m_val)
   | Bottom => False
   | ϕ1 ->' ϕ2 => (𝔐 |= ϕ1) -> (𝔐 |= ϕ2)
   | ⃟ϕ =>
@@ -178,7 +178,7 @@ Context (Z : state_model_relation).
 
 Definition atomic_harmony : Prop :=
   forall p p', Z p p' -> forall pr: prop,
-      p.(st_val) (pr, p.(st_point)) <-> p'.(st_val) (pr, p'.(st_point)).
+      (pr, p.(st_point)) ∈ p.(st_val) <-> (pr, p'.(st_point)) ∈ p'.(st_val).
 
 Definition f_zig (f : muf) : Prop :=
   forall p q p', Z p p' ->
