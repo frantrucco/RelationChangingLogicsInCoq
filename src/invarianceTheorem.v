@@ -210,7 +210,7 @@ Context {W W' : Set}.
 Context {Z: state_model_relation W W'}.
 Context (bis: bisimulation Z).
 
-Definition get_HA : atomic_harmony Z.
+Definition get_AH : atomic_harmony Z.
   move: bis =>[HA _].
   exact: HA.
 Defined.
@@ -238,34 +238,32 @@ Proof.
   elim: ϕ => [prop | | ϕ IHϕ ψ IHψ | ϕ IH] /=
              𝔐 𝔐'.
   + move=> [Z [bis HZ]].
-    rewrite !to_st_val !to_st_point ((get_HA bis) ?? HZ).
-    tauto.
-  + tauto.
-  + move=>bis.
-    split; move=> HIf Hsat.
-    - eapply (IHψ 𝔐); first eassumption.
-      apply HIf.
-      by eapply (IHϕ 𝔐); eassumption.
+    rewrite !to_st_val !to_st_point.
+    by apply ((get_AH bis) ?? HZ).
+ 
+  + by [].
 
-    - eapply (IHψ 𝔐); first eassumption.
-      apply HIf.
-      by eapply (IHϕ 𝔐).
+  + move=>bis.
+    split; move=> HIf Hsat;
+      apply (IHψ ?? bis);
+      apply HIf;
+      by apply (IHϕ ?? bis).
  
   + move=> [Z [bis HZ]]. 
     split.
  
-    - move=> [q [HfWpp' Hsatq]].
-      apply (get_Zig bis _ _ _ HZ) in HfWpp'
-          as [q' [HfW'q'p' HZqq']].
+    - move=> [q [HqinfW Hsatq]].
+      apply ((get_Zig bis) ?? HZ) in HqinfW
+        as [q' [Hq'infW' HZqq']].
       exists q'.
       split; first by [].
       apply (IH (to_pm q)); last by [].
       exists Z.
       by rewrite !to_st_to_pm.
       
-    - move=> [q' [HfWpp' Hsatq']].
-      apply (get_Zag bis _ _ _ HZ) in HfWpp'
-          as [q [HfWpq HZqq']].
+    - move=> [q' [Hq'infW' Hsatq']].
+      apply ((get_Zag bis) ?? HZ) in Hq'infW'
+          as [q [HqinfW HZqq']].
       exists q.
       split; first by [].
       eapply (IH (to_pm q)); last by eassumption.
