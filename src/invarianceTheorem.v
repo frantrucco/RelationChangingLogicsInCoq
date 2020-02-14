@@ -257,7 +257,7 @@ Proof.
         as [q' [Hq'infW' HZqq']].
       exists q'.
       split; first by [].
-      apply (IH (to_pm q)); last by [].
+      apply (IH q) ; last by [].
       exists Z.
       by rewrite !to_st_to_pm.
       
@@ -266,7 +266,7 @@ Proof.
           as [q [HqinfW HZqq']].
       exists q.
       split; first by [].
-      eapply (IH (to_pm q)); last by eassumption.
+      eapply (IH q); last by eassumption.
       exists Z.
       by rewrite !to_st_to_pm.
 Qed.
