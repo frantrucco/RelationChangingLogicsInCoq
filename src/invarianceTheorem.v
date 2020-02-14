@@ -407,13 +407,11 @@ Proof.
     split; first by [].
     have tTY_img : ⟨ t, T, Y ⟩ ∈ image 𝔐.
     + apply: Union_intror.
-      eexists.
-      eassumption.
+      by exists ⟨ s, S, X ⟩.
 
-    have st_img : st' ∈ image 𝔐'.
+    have st'_img : st' ∈ image 𝔐'.
     + apply: Union_intror.
-      eexists.
-      eassumption.
+      by exists ⟨ s', S', X' ⟩.
 
     split_ands; try by [].
     move=>ϕ.
@@ -480,15 +478,13 @@ Proof.
     case: fw_sat=>st [inS H].
     exists st.
     split; first by [].
-    have tTY_img : ⟨ t', T', Y' ⟩ ∈ image 𝔐'.
+    have t'T'Y'_img : ⟨ t', T', Y' ⟩ ∈ image 𝔐'.
     + apply: Union_intror.
-      eexists.
-      eassumption.
+      by exists ⟨ s', S', X' ⟩.
 
     have st_img : st ∈ image 𝔐.
     + apply: Union_intror.
-      eexists.
-      eassumption.
+      by exists ⟨ s, S, X ⟩.
 
     split_ands; try by [].
     move=>ϕ.
