@@ -310,8 +310,8 @@ Definition image : set (state_model 𝔐) := image_iden ∪ image_fw.
 
 Definition saturation :=
   forall (Σ: set form) (st: state_model 𝔐),
-    st ∈ image -> forall q : Dyn,
-    let 𝔖 := (F q 𝔐) st in
+    st ∈ image -> forall d : Dyn,
+    let 𝔖 := (F d 𝔐) st in
     f_sat 𝔖 Σ -> sat 𝔖 Σ.
 
 End Saturation.
@@ -514,7 +514,7 @@ Proof.
     rewrite /Ensembles.In /image_iden; tauto.
   - apply: Union_introl.
     rewrite /Ensembles.In /image_iden; tauto.
-  - move=>d. move: 𝔐 𝔐' Heq => [ [W R V] /= w] [ [W' R' V'] /= w'].
+  - move: 𝔐 𝔐' Heq => [ [W R V] /= w] [ [W' R' V'] /= w'].
     by apply.
 Qed.
 
