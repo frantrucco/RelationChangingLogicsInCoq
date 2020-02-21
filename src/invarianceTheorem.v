@@ -308,11 +308,12 @@ Definition image_fw : set (state_model 𝔐) :=
 
 Definition image := image_iden ∪ image_fw.
 
-Definition saturation :=
+Definition saturation_d d :=
   forall (Σ: set form) (st: state_model 𝔐),
-    st ∈ image -> forall d : Dyn,
-    let 𝔖 := (F d 𝔐) st in
+    st ∈ image -> let 𝔖 := (F d 𝔐) st in
     f_sat 𝔖 Σ -> sat 𝔖 Σ.
+
+Definition saturation := forall d, saturation_d d.
 
 End Saturation.
 
