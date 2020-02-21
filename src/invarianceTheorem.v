@@ -89,13 +89,12 @@ Section InvarianceTheorem.
 
 (* Syntax *)
 Variable Dyn : Set.
-Variable d : Dyn.
 
 Inductive form : Set :=
   | Atom    : prop -> form
   | Bottom  : form
   | If      : form -> form -> form
-  | DynDiam : form -> form.
+  | DynDiam : Dyn -> form -> form.
 
 Coercion Atom : prop >-> form.
 
@@ -105,8 +104,8 @@ Notation "⊥'" := Bottom.
 Notation "p ->' q" := (If p q)
                      (at level 90, right associativity).
 
-Notation "⃟ ϕ" := (DynDiam ϕ)
-                        (at level 65, right associativity).
+Notation "⃟ d ϕ" := (DynDiam d ϕ)
+                     (at level 65, d at level 9, right associativity).
 
 (* Syntactic sugar *)
 Definition Not (ϕ : form) : form := ϕ ->' ⊥'.
@@ -133,10 +132,12 @@ Definition Iif (ϕ ψ : form) : form := (ϕ ->' ψ) /\' (ψ ->' ϕ).
 Notation "p <->' q" := (Iif p q)
                      (at level 95, right associativity).
 
-Definition DynBox (ϕ : form) : form := ~'⃟ ~'ϕ.
+Definition DynBox (d : Dyn) (ϕ : form) : form := ~'⃟ d ~'ϕ.
 
-Notation "⃞ ϕ" := (DynBox ϕ)
-                        (at level 65, right associativity).
+Notation "⃞ d ϕ" := (DynBox d ϕ)
+                     (at level 65, d at level 9, right associativity).
+
+Print DynBox.
 
 (* Semantics *)
 
@@ -152,7 +153,7 @@ Fixpoint satisfies (𝔐: pointed_model) (ϕ : form) : Prop :=
   | Atom a => (a, 𝔐.(pm_point)) ∈ 𝔐.(m_val)
   | Bottom => False
   | ϕ1 ->' ϕ2 => (𝔐 |= ϕ1) -> (𝔐 |= ϕ2)
-  | ⃟ϕ =>
+  | ⃟ d ϕ =>
     let fw := F d 𝔐.(m_states) in
     exists p', p' ∈ fw 𝔐  /\  p' |= ϕ
   end
@@ -180,6 +181,7 @@ Definition atomic_harmony : Prop :=
   forall p p', Z p p' -> forall pr: prop,
       (pr, p.(st_point)) ∈ p.(st_val) <-> (pr, p'.(st_point)) ∈ p'.(st_val).
 
+
 Definition f_zig (f : muf) : Prop :=
   forall p q p', Z p p' ->
     q ∈ f W p ->
@@ -192,7 +194,8 @@ Definition f_zag (f : muf) : Prop :=
 
 Definition bisimulation : Prop :=
   atomic_harmony /\
-  f_zig (F d) /\ f_zag (F d).
+  (forall d, f_zig (F d)) /\
+  (forall d, f_zag (F d)).
 
 End Bisimulation.
 
@@ -200,7 +203,6 @@ Definition bisimilar (𝔐 𝔐': pointed_model) : Prop :=
   exists Z, bisimulation Z /\ Z 𝔐 𝔐'.
 
 Notation "𝔐 ⇆ 𝔐'" := (bisimilar 𝔐 𝔐') (at level 30).
-
 
 Arguments state_model_relation : clear implicits.
 
@@ -215,12 +217,12 @@ Definition get_AH : atomic_harmony Z.
   exact: HA.
 Defined.
 
-Definition get_Zig : f_zig Z (F d).
+Definition get_Zig d : f_zig Z (F d).
   move: bis =>[_ [H _]].
   exact: H.
 Defined.
 
-Definition get_Zag : f_zag Z (F d).
+Definition get_Zag d : f_zag Z (F d).
   move: bis =>[_ [_ H]].
   exact: H.
 Defined.
@@ -235,12 +237,12 @@ Theorem InvarianceUnderBisimulation :
 Proof.
   move=> 𝔐 𝔐' bis ϕ.
   move: 𝔐 𝔐' bis.
-  elim: ϕ => [prop | | ϕ IHϕ ψ IHψ | ϕ IH] /=
+  elim: ϕ => [prop | | ϕ IHϕ ψ IHψ | d ϕ IH] /=
              𝔐 𝔐'.
   + move=> [Z [bis HZ]].
     rewrite !to_st_val !to_st_point.
     by apply ((get_AH bis) ?? HZ).
- 
+
   + by [].
 
   + move=>bis.
@@ -248,10 +250,10 @@ Proof.
       apply (IHψ ?? bis);
       apply HIf;
       by apply (IHϕ ?? bis).
- 
-  + move=> [Z [bis HZ]]. 
+
+  + move=> [Z [bis HZ]].
     split.
- 
+
     - move=> [q [HqinfW Hsatq]].
       apply ((get_Zig bis) ?? HZ) in HqinfW
         as [q' [Hq'infW' HZqq']].
@@ -260,7 +262,7 @@ Proof.
       apply (IH q) ; last by [].
       exists Z.
       by rewrite !to_st_to_pm.
-      
+
     - move=> [q' [Hq'infW' Hsatq']].
       apply ((get_Zag bis) ?? HZ) in Hq'infW'
           as [q [HqinfW HZqq']].
@@ -294,20 +296,23 @@ Arguments f_sat {_}.
 Section Saturation.
 
 Variable 𝔐 : model.
-Definition fw := F d 𝔐.
 
 Definition image_iden : set (state_model 𝔐) :=
   fun st => st_rel st = m_rel 𝔐 /\ st_val st = m_val 𝔐.
 
-Definition image_fw : set (state_model 𝔐) := 
-  fun st => exists st': state_model 𝔐, st ∈ fw st'.
+Definition image_fw_d d : set (state_model 𝔐) :=
+  fun st => exists st': state_model 𝔐, st ∈ (F d 𝔐) st'.
 
-Definition image := image_iden ∪ image_fw.
+Definition image_fw : set (state_model 𝔐) :=
+  fun st => exists d, st ∈ image_fw_d d.
+
+Definition image : set (state_model 𝔐) := image_iden ∪ image_fw.
 
 Definition saturation :=
   forall (Σ: set form) (st: state_model 𝔐),
-    st ∈ image -> let 𝔖 := fw st in
-                  f_sat 𝔖 Σ -> sat 𝔖 Σ.
+    st ∈ image -> forall q : Dyn,
+    let 𝔖 := (F q 𝔐) st in
+    f_sat 𝔖 Σ -> sat 𝔖 Σ.
 
 End Saturation.
 
@@ -318,9 +323,6 @@ Variable 𝔐' : pointed_model.
 
 Hypothesis M_sat : saturation 𝔐.
 Hypothesis M'_sat : saturation 𝔐'.
-
-Let f__W := F d 𝔐.
-Let f__W' := F d 𝔐'.
 
 Definition equiv_in_image st st' :=
     st ∈ image 𝔐 /\
@@ -333,7 +335,7 @@ Definition big_and Δ := fold_right And Top Δ.
 
 Notation "'⋀' Δ" := (big_and Δ) (at level 0).
 
-Lemma sat_fold_forall m Δ: 
+Lemma sat_fold_forall m Δ:
   Forall (fun ϕ : form => m |= ϕ) Δ <-> m |= ⋀Δ.
 Proof.
   elim: Δ; first by simpl; tauto.
@@ -344,6 +346,7 @@ Qed.
 
 Lemma equiv_in_image_bisimulation : bisimulation equiv_in_image.
 Proof.
+  unfold equiv_in_image.
   split_ands.
   - move=> s s' s_s' p.
     case: s_s' =>[s_img [s'_img seqs']].
@@ -353,7 +356,7 @@ Proof.
     + have sat : s' |= p by assumption.
       by move/seqs': sat.
 
-  - move=>[s S X] [t T Y] [s' S' X'] /=.
+  - move=>d. move=>[s S X] [t T Y] [s' S' X'] /=.
     move=>[imgS [imgS' SeqS']] tTYinsSX.
     set Σ : set form := (fun ϕ=> ⟨ t , T , Y ⟩ |= ϕ).
 
@@ -365,24 +368,24 @@ Proof.
       by apply.
 
     have sat_diamond_big_and :
-      forall Δ : finset Σ, ⟨s, S, X⟩ |= ⃟⋀Δ.
+      forall Δ : finset Σ, ⟨s, S, X⟩ |= ⃟ d ⋀Δ.
     + move=>Δ.
       exists ⟨t, T, Y⟩.
       split; first by [].
       by apply: sat_big_and.
 
     have sat_diamond_big_and' :
-      forall Δ : finset Σ, ⟨s', S', X'⟩ |= ⃟⋀Δ
+      forall Δ : finset Σ, ⟨s', S', X'⟩ |= ⃟ d ⋀Δ
         by move=>Δ; apply/SeqS'.
 
     have sat_next_big_and' :
-      forall Δ : finset Σ, exists st', st' ∈ f__W' ⟨s', S', X'⟩ /\ st' |= ⋀Δ.
+      forall Δ : finset Σ, exists st', st' ∈ (F d 𝔐') ⟨s', S', X'⟩ /\ st' |= ⋀Δ.
     + move=>Δ.
       move: (sat_diamond_big_and' Δ) => [st' [IH1 IH2]].
       by exists st'.
-      
+
     pose 𝔖' : set (state_model _) :=
-      fun st' => st' ∈ f__W' ⟨ s', S', X' ⟩ /\
+      fun st' => st' ∈ (F d 𝔐') ⟨ s', S', X' ⟩ /\
               exists Δ : finset Σ, st' |= ⋀Δ.
 
     have 𝔖'_fsat : f_sat 𝔖' Σ.
@@ -394,23 +397,23 @@ Proof.
       * by exists Δ.
       * by apply sat_fold_forall.
 
-    have fw'_fsat : f_sat (f__W' ⟨ s', S', X' ⟩) Σ.
+    have fw'_fsat : f_sat ((F d 𝔐') ⟨ s', S', X' ⟩) Σ.
     + move=>Δ.
       move: (𝔖'_fsat Δ)=>[st' [ [ ? ?] ?]].
       by exists st'.
 
-    have fw'_sat : sat (f__W' ⟨ s', S', X' ⟩) Σ
+    have fw'_sat : sat ((F d 𝔐') ⟨ s', S', X' ⟩) Σ
       by apply: M'_sat.
 
     case: fw'_sat=>st' [inS H].
     exists st'.
     split; first by [].
     have tTY_img : ⟨ t, T, Y ⟩ ∈ image 𝔐.
-    + apply: Union_intror.
+    + apply: Union_intror. exists d.
       by exists ⟨ s, S, X ⟩.
 
     have st'_img : st' ∈ image 𝔐'.
-    + apply: Union_intror.
+    + apply: Union_intror. exists d.
       by exists ⟨ s', S', X' ⟩.
 
     split_ands; try by [].
@@ -419,14 +422,14 @@ Proof.
     + move=>Ht.
       apply: H.
       by apply: Ht.
-             
+
     + case: (sat_classic  ⟨ t, T, Y ⟩ ϕ); first by [].
       fold (Σ (~' ϕ)).
       move/H => sat_notϕ sat_ϕ.
       apply sat_notϕ in sat_ϕ.
       contradiction.
 
-  - move=>[s S X] [t' T' Y'] [s' S' X'] /=.
+  - move=>d. move=> [s S X] [t' T' Y'] [s' S' X'] /=.
     move=>[imgS [imgS' SeqS']] t'T'Y'insSX.
     set Σ : set form := (fun ϕ=> ⟨ t' , T' , Y' ⟩ |= ϕ).
 
@@ -438,24 +441,24 @@ Proof.
       by apply.
 
     have sat_diamond_big_and' :
-      forall Δ : finset Σ, ⟨s', S', X'⟩ |= ⃟⋀Δ.
+      forall Δ : finset Σ, ⟨s', S', X'⟩ |= ⃟ d ⋀Δ.
     + move=>Δ.
       exists ⟨t', T', Y'⟩.
       split; first by [].
       by apply: sat_big_and'.
 
     have sat_diamond_big_and :
-      forall Δ : finset Σ, ⟨s, S, X⟩ |= ⃟⋀Δ
+      forall Δ : finset Σ, ⟨s, S, X⟩ |= ⃟ d ⋀Δ
         by move=>Δ; apply/SeqS'.
 
     have sat_next_big_and :
-      forall Δ : finset Σ, exists st, st ∈ f__W ⟨s, S, X⟩ /\ st |= ⋀Δ.
+      forall Δ : finset Σ, exists st, st ∈ (F d 𝔐) ⟨s, S, X⟩ /\ st |= ⋀Δ.
     + move=>Δ.
       move: (sat_diamond_big_and Δ)=> /= [st [IH1 IH2]].
       by exists st.
 
     pose 𝔖 : set (state_model _) :=
-      fun st => st ∈ f__W ⟨ s, S, X ⟩ /\
+      fun st => st ∈ (F d 𝔐) ⟨ s, S, X ⟩ /\
               exists Δ : finset Σ, st |= ⋀Δ.
 
     have 𝔖_fsat : f_sat 𝔖 Σ.
@@ -467,23 +470,23 @@ Proof.
       * by exists Δ.
       * by apply sat_fold_forall.
 
-    have fw_fsat : f_sat (f__W ⟨ s, S, X ⟩) Σ.
+    have fw_fsat : f_sat ((F d 𝔐) ⟨ s, S, X ⟩) Σ.
     + move=>Δ.
       move: (𝔖_fsat Δ)=>[st [ [ ? ?] ?]].
       by exists st.
 
-    have fw_sat : sat (f__W ⟨ s, S, X ⟩) Σ
+    have fw_sat : sat ((F d 𝔐) ⟨ s, S, X ⟩) Σ
       by apply: M_sat.
 
     case: fw_sat=>st [inS H].
     exists st.
     split; first by [].
     have t'T'Y'_img : ⟨ t', T', Y' ⟩ ∈ image 𝔐'.
-    + apply: Union_intror.
+    + apply: Union_intror. exists d.
       by exists ⟨ s', S', X' ⟩.
 
     have st_img : st ∈ image 𝔐.
-    + apply: Union_intror.
+    + apply: Union_intror. exists d.
       by exists ⟨ s, S, X ⟩.
 
     split_ands; try by [].
@@ -511,7 +514,7 @@ Proof.
     rewrite /Ensembles.In /image_iden; tauto.
   - apply: Union_introl.
     rewrite /Ensembles.In /image_iden; tauto.
-  - move: 𝔐 𝔐' Heq => [ [W R V] /= w] [ [W' R' V'] /= w'].
+  - move=>d. move: 𝔐 𝔐' Heq => [ [W R V] /= w] [ [W' R' V'] /= w'].
     by apply.
 Qed.
 
