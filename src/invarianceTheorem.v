@@ -306,7 +306,7 @@ Definition image_fw_d d : set (state_model 𝔐) :=
 Definition image_fw : set (state_model 𝔐) :=
   fun st => exists d, st ∈ image_fw_d d.
 
-Definition image : set (state_model 𝔐) := image_iden ∪ image_fw.
+Definition image := image_iden ∪ image_fw.
 
 Definition saturation :=
   forall (Σ: set form) (st: state_model 𝔐),
