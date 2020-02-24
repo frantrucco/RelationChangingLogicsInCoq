@@ -137,7 +137,6 @@ Definition DynBox (d : Dyn) (ϕ : form) : form := ~'⃟ d ~'ϕ.
 Notation "⃞ d ϕ" := (DynBox d ϕ)
                      (at level 65, d at level 9, right associativity).
 
-Print DynBox.
 
 (* Semantics *)
 
@@ -301,7 +300,7 @@ Definition image_iden : set (state_model 𝔐) :=
   fun st => st_rel st = m_rel 𝔐 /\ st_val st = m_val 𝔐.
 
 Definition image_fw_d d : set (state_model 𝔐) :=
-  fun st => exists st': state_model 𝔐, st ∈ (F d 𝔐) st'.
+  fun st => exists st': state_model 𝔐, st ∈ F d 𝔐 st'.
 
 Definition image_fw : set (state_model 𝔐) :=
   fun st => exists d, st ∈ image_fw_d d.
@@ -310,7 +309,7 @@ Definition image := image_iden ∪ image_fw.
 
 Definition saturation_d d :=
   forall (Σ: set form) (st: state_model 𝔐),
-    st ∈ image -> let 𝔖 := (F d 𝔐) st in
+    st ∈ image -> let 𝔖 := F d 𝔐 st in
     f_sat 𝔖 Σ -> sat 𝔖 Σ.
 
 Definition saturation := forall d, saturation_d d.
@@ -357,7 +356,7 @@ Proof.
     + have sat : s' |= p by assumption.
       by move/seqs': sat.
 
-  - move=>d. move=>[s S X] [t T Y] [s' S' X'] /=.
+  - move=>d [s S X] [t T Y] [s' S' X'] /=.
     move=>[imgS [imgS' SeqS']] tTYinsSX.
     set Σ : set form := (fun ϕ=> ⟨ t , T , Y ⟩ |= ϕ).
 
@@ -380,13 +379,13 @@ Proof.
         by move=>Δ; apply/SeqS'.
 
     have sat_next_big_and' :
-      forall Δ : finset Σ, exists st', st' ∈ (F d 𝔐') ⟨s', S', X'⟩ /\ st' |= ⋀Δ.
+      forall Δ : finset Σ, exists st', st' ∈ F d 𝔐' ⟨s', S', X'⟩ /\ st' |= ⋀Δ.
     + move=>Δ.
       move: (sat_diamond_big_and' Δ) => [st' [IH1 IH2]].
       by exists st'.
 
     pose 𝔖' : set (state_model _) :=
-      fun st' => st' ∈ (F d 𝔐') ⟨ s', S', X' ⟩ /\
+      fun st' => st' ∈ F d 𝔐' ⟨ s', S', X' ⟩ /\
               exists Δ : finset Σ, st' |= ⋀Δ.
 
     have 𝔖'_fsat : f_sat 𝔖' Σ.
@@ -398,12 +397,12 @@ Proof.
       * by exists Δ.
       * by apply sat_fold_forall.
 
-    have fw'_fsat : f_sat ((F d 𝔐') ⟨ s', S', X' ⟩) Σ.
+    have fw'_fsat : f_sat (F d 𝔐' ⟨ s', S', X' ⟩) Σ.
     + move=>Δ.
       move: (𝔖'_fsat Δ)=>[st' [ [ ? ?] ?]].
       by exists st'.
 
-    have fw'_sat : sat ((F d 𝔐') ⟨ s', S', X' ⟩) Σ
+    have fw'_sat : sat (F d 𝔐' ⟨ s', S', X' ⟩) Σ
       by apply: M'_sat.
 
     case: fw'_sat=>st' [inS H].
@@ -430,7 +429,7 @@ Proof.
       apply sat_notϕ in sat_ϕ.
       contradiction.
 
-  - move=>d. move=> [s S X] [t' T' Y'] [s' S' X'] /=.
+  - move=>d [s S X] [t' T' Y'] [s' S' X'] /=.
     move=>[imgS [imgS' SeqS']] t'T'Y'insSX.
     set Σ : set form := (fun ϕ=> ⟨ t' , T' , Y' ⟩ |= ϕ).
 
@@ -453,13 +452,13 @@ Proof.
         by move=>Δ; apply/SeqS'.
 
     have sat_next_big_and :
-      forall Δ : finset Σ, exists st, st ∈ (F d 𝔐) ⟨s, S, X⟩ /\ st |= ⋀Δ.
+      forall Δ : finset Σ, exists st, st ∈ F d 𝔐 ⟨s, S, X⟩ /\ st |= ⋀Δ.
     + move=>Δ.
       move: (sat_diamond_big_and Δ)=> /= [st [IH1 IH2]].
       by exists st.
 
     pose 𝔖 : set (state_model _) :=
-      fun st => st ∈ (F d 𝔐) ⟨ s, S, X ⟩ /\
+      fun st => st ∈ F d 𝔐 ⟨ s, S, X ⟩ /\
               exists Δ : finset Σ, st |= ⋀Δ.
 
     have 𝔖_fsat : f_sat 𝔖 Σ.
@@ -471,12 +470,12 @@ Proof.
       * by exists Δ.
       * by apply sat_fold_forall.
 
-    have fw_fsat : f_sat ((F d 𝔐) ⟨ s, S, X ⟩) Σ.
+    have fw_fsat : f_sat (F d 𝔐 ⟨ s, S, X ⟩) Σ.
     + move=>Δ.
       move: (𝔖_fsat Δ)=>[st [ [ ? ?] ?]].
       by exists st.
 
-    have fw_sat : sat ((F d 𝔐) ⟨ s, S, X ⟩) Σ
+    have fw_sat : sat (F d 𝔐 ⟨ s, S, X ⟩) Σ
       by apply: M_sat.
 
     case: fw_sat=>st [inS H].
