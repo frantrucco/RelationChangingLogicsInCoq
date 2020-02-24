@@ -53,6 +53,10 @@ Structure state_model (W: Set) := {
   st_val: valuation W
 }.
 
+Definition muf : Type := forall (W : Set),
+  state_model W -> set (state_model W).
+
+
 Notation "⟨ a , b , c ⟩" :=
   {| st_point := a; st_val := c; st_rel := b |}.
 
@@ -85,16 +89,20 @@ Lemma to_st_to_pm {W} (st: state_model W): to_st (to_pm st) = st.
   by case: st.
 Defined.
 
-Section InvarianceTheorem.
+Module Type DYN.
+Variable Dyn : Set.
+Variable F : Dyn -> muf.
+End DYN.
+
+Module DynLogic (D: DYN).
 
 (* Syntax *)
-Variable Dyn : Set.
 
 Inductive form : Set :=
   | Atom    : prop -> form
   | Bottom  : form
   | If      : form -> form -> form
-  | DynDiam : Dyn -> form -> form.
+  | DynDiam : D.Dyn -> form -> form.
 
 Coercion Atom : prop >-> form.
 
@@ -132,18 +140,13 @@ Definition Iif (ϕ ψ : form) : form := (ϕ ->' ψ) /\' (ψ ->' ϕ).
 Notation "p <->' q" := (Iif p q)
                      (at level 95, right associativity).
 
-Definition DynBox (d : Dyn) (ϕ : form) : form := ~'⃟ d ~'ϕ.
+Definition DynBox (d : D.Dyn) (ϕ : form) : form := ~'⃟ d ~'ϕ.
 
 Notation "⃞ d ϕ" := (DynBox d ϕ)
                      (at level 65, d at level 9, right associativity).
 
 
 (* Semantics *)
-
-Definition muf : Type := forall (W : Set),
-  state_model W -> set (state_model W).
-
-Variable F : Dyn -> muf.
 
 Reserved Notation "p |= ϕ" (at level 30).
 
@@ -153,7 +156,7 @@ Fixpoint satisfies (𝔐: pointed_model) (ϕ : form) : Prop :=
   | Bottom => False
   | ϕ1 ->' ϕ2 => (𝔐 |= ϕ1) -> (𝔐 |= ϕ2)
   | ⃟ d ϕ =>
-    let fw := F d 𝔐.(m_states) in
+    let fw := D.F d 𝔐.(m_states) in
     exists p', p' ∈ fw 𝔐  /\  p' |= ϕ
   end
 where "p |= ϕ" := (satisfies p ϕ).
@@ -193,8 +196,8 @@ Definition f_zag (f : muf) : Prop :=
 
 Definition bisimulation : Prop :=
   atomic_harmony /\
-  (forall d, f_zig (F d)) /\
-  (forall d, f_zag (F d)).
+  (forall d, f_zig (D.F d)) /\
+  (forall d, f_zag (D.F d)).
 
 End Bisimulation.
 
@@ -216,12 +219,12 @@ Definition get_AH : atomic_harmony Z.
   exact: HA.
 Defined.
 
-Definition get_Zig d : f_zig Z (F d).
+Definition get_Zig d : f_zig Z (D.F d).
   move: bis =>[_ [H _]].
   exact: H.
 Defined.
 
-Definition get_Zag d : f_zag Z (F d).
+Definition get_Zag d : f_zag Z (D.F d).
   move: bis =>[_ [_ H]].
   exact: H.
 Defined.
@@ -300,7 +303,7 @@ Definition image_iden : set (state_model 𝔐) :=
   fun st => st_rel st = m_rel 𝔐 /\ st_val st = m_val 𝔐.
 
 Definition image_fw_d d : set (state_model 𝔐) :=
-  fun st => exists st': state_model 𝔐, st ∈ F d 𝔐 st'.
+  fun st => exists st': state_model 𝔐, st ∈ D.F d 𝔐 st'.
 
 Definition image_fw : set (state_model 𝔐) :=
   fun st => exists d, st ∈ image_fw_d d.
@@ -309,7 +312,7 @@ Definition image := image_iden ∪ image_fw.
 
 Definition saturation_d d :=
   forall (Σ: set form) (st: state_model 𝔐),
-    st ∈ image -> let 𝔖 := F d 𝔐 st in
+    st ∈ image -> let 𝔖 := D.F d 𝔐 st in
     f_sat 𝔖 Σ -> sat 𝔖 Σ.
 
 Definition saturation := forall d, saturation_d d.
@@ -379,13 +382,13 @@ Proof.
         by move=>Δ; apply/SeqS'.
 
     have sat_next_big_and' :
-      forall Δ : finset Σ, exists st', st' ∈ F d 𝔐' ⟨s', S', X'⟩ /\ st' |= ⋀Δ.
+      forall Δ : finset Σ, exists st', st' ∈ D.F d 𝔐' ⟨s', S', X'⟩ /\ st' |= ⋀Δ.
     + move=>Δ.
       move: (sat_diamond_big_and' Δ) => [st' [IH1 IH2]].
       by exists st'.
 
     pose 𝔖' : set (state_model _) :=
-      fun st' => st' ∈ F d 𝔐' ⟨ s', S', X' ⟩ /\
+      fun st' => st' ∈ D.F d 𝔐' ⟨ s', S', X' ⟩ /\
               exists Δ : finset Σ, st' |= ⋀Δ.
 
     have 𝔖'_fsat : f_sat 𝔖' Σ.
@@ -397,12 +400,12 @@ Proof.
       * by exists Δ.
       * by apply sat_fold_forall.
 
-    have fw'_fsat : f_sat (F d 𝔐' ⟨ s', S', X' ⟩) Σ.
+    have fw'_fsat : f_sat (D.F d 𝔐' ⟨ s', S', X' ⟩) Σ.
     + move=>Δ.
       move: (𝔖'_fsat Δ)=>[st' [ [ ? ?] ?]].
       by exists st'.
 
-    have fw'_sat : sat (F d 𝔐' ⟨ s', S', X' ⟩) Σ
+    have fw'_sat : sat (D.F d 𝔐' ⟨ s', S', X' ⟩) Σ
       by apply: M'_sat.
 
     case: fw'_sat=>st' [inS H].
@@ -452,13 +455,13 @@ Proof.
         by move=>Δ; apply/SeqS'.
 
     have sat_next_big_and :
-      forall Δ : finset Σ, exists st, st ∈ F d 𝔐 ⟨s, S, X⟩ /\ st |= ⋀Δ.
+      forall Δ : finset Σ, exists st, st ∈ D.F d 𝔐 ⟨s, S, X⟩ /\ st |= ⋀Δ.
     + move=>Δ.
       move: (sat_diamond_big_and Δ)=> /= [st [IH1 IH2]].
       by exists st.
 
     pose 𝔖 : set (state_model _) :=
-      fun st => st ∈ F d 𝔐 ⟨ s, S, X ⟩ /\
+      fun st => st ∈ D.F d 𝔐 ⟨ s, S, X ⟩ /\
               exists Δ : finset Σ, st |= ⋀Δ.
 
     have 𝔖_fsat : f_sat 𝔖 Σ.
@@ -470,12 +473,12 @@ Proof.
       * by exists Δ.
       * by apply sat_fold_forall.
 
-    have fw_fsat : f_sat (F d 𝔐 ⟨ s, S, X ⟩) Σ.
+    have fw_fsat : f_sat (D.F d 𝔐 ⟨ s, S, X ⟩) Σ.
     + move=>Δ.
       move: (𝔖_fsat Δ)=>[st [ [ ? ?] ?]].
       by exists st.
 
-    have fw_sat : sat (F d 𝔐 ⟨ s, S, X ⟩) Σ
+    have fw_sat : sat (D.F d 𝔐 ⟨ s, S, X ⟩) Σ
       by apply: M_sat.
 
     case: fw_sat=>st [inS H].
@@ -520,8 +523,74 @@ Qed.
 
 End HennesyMilner.
 
-End InvarianceTheorem.
+End DynLogic.
 
+Module Examples.
+
+Module SbDyn <: DYN.
+
+Inductive SbDyn := Diamond | Sb.
+Definition Dyn := SbDyn.
+
+Import RelationClasses.
+
+Definition rel_minus {W} (R: relation W) (w v: W) : relation W :=
+  fun w' v'=>
+  (R w' v' -> w = w' -> v = v' -> False) \/ (w <> w' \/ v <> v' -> R w' v').
+
+Definition F (d: Dyn) : muf :=
+  match d with
+  | Diamond => fun W '⟨w, R, V⟩ '⟨v, R', V'⟩=>
+     R w v /\ R = R' /\ V = V'
+  | Sb => fun W '⟨w, R, V⟩ '⟨v, R', V'⟩=>
+    R' = rel_minus R w v /\ V' = V
+  end.
+
+End SbDyn.
+
+Module SbDynLogic := DynLogic SbDyn.
+Import SbDynLogic.
+Import SbDyn.
+
+Notation "⃟ ϕ" := (DynDiam Diamond ϕ)
+                     (at level 65, right associativity).
+
+Notation "'⃟sb' ϕ" := (DynDiam Sb ϕ)
+                     (at level 65, right associativity).
+
+Axiom relation_extensionality : forall{W} {R R': relation W},
+   (forall (v w: W), R v w <-> R' v w) -> R = R'. 
+
+(* WIP *)
+Lemma ffs W v S V w R S': (⟨v,S,V⟩ ∈ F Sb W ⟨w,R,V⟩) <-> (⟨v,S',V⟩ ∈ F Diamond W ⟨w,R,V⟩).
+
+Example valid_in_sb : forall (p:prop) pm, pm |= ⃟sb p ->' ⃟p.
+Proof.
+  move=>p [ [W R] V] /= w [ [v R'] V'] /= [ [H1 H2] H3].
+  exists ⟨v, R', V'⟩.
+  unfold Ensembles.In in *.
+  unfold rel_minus in H1.
+  simpl in *.
+  split; last by [].
+  case: (classic (R w v)).
+  - move=>Rwv.
+    split_ands; try by [].
+    rewrite H1.
+    apply relation_extensionality.
+    move=> w' v'.
+    split.
+    + move=>Rw'v'.
+      admit. (* should be easy considering when w=w' and v=v' or not *)
+    + admit. (* should be easy considering when w=w' and v=v' or not *)
+  - move=>H.
+ 
+case.
+    + move/(_ eq_refl eq_refl).
+      contradiction.
+    + move=>H.
+      split_ands; try by [].
+    
+End Examples.
 
 (* Local Variables: *)
 (* company-coq-local-symbols: ( ) *)
