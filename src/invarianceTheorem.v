@@ -282,18 +282,18 @@ Variable 𝔖 : set (state_model 𝔐.(m_states)).
 Variable Σ : set form.
 Variable ϕ : form.
 
-Definition sat :=
+Definition satisfiable :=
   exists st : state_model 𝔐.(m_states),
     st ∈ 𝔖 /\ (forall ϕ : form, ϕ ∈ Σ -> st |= ϕ).
 
-Definition f_sat := forall Δ: finset Σ,
+Definition finite_satisfiable := forall Δ: finset Σ,
   exists st : state_model 𝔐, st ∈ 𝔖 /\
   Forall (fun ϕ : form=> st |= ϕ) Δ.
 
 End Satisfability.
 
-Arguments sat {_}.
-Arguments f_sat {_}.
+Arguments satisfiable {_}.
+Arguments finite_satisfiable {_}.
 
 Section Saturation.
 
@@ -310,12 +310,12 @@ Definition image_fw : set (state_model 𝔐) :=
 
 Definition image := image_iden ∪ image_fw.
 
-Definition saturation_d d :=
+Definition f_saturated d :=
   forall (Σ: set form) (st: state_model 𝔐),
     st ∈ image -> let 𝔖 := D.F d 𝔐 st in
-    f_sat 𝔖 Σ -> sat 𝔖 Σ.
+    finite_satisfiable 𝔖 Σ -> satisfiable 𝔖 Σ.
 
-Definition saturation := forall d, saturation_d d.
+Definition saturated := forall d, f_saturated d.
 
 End Saturation.
 
@@ -324,8 +324,8 @@ Section HennesyMilner.
 Variable 𝔐 : pointed_model.
 Variable 𝔐' : pointed_model.
 
-Hypothesis M_sat : saturation 𝔐.
-Hypothesis M'_sat : saturation 𝔐'.
+Hypothesis M_sat : saturated 𝔐.
+Hypothesis M'_sat : saturated 𝔐'.
 
 Definition equiv_in_image st st' :=
     st ∈ image 𝔐 /\
@@ -391,7 +391,7 @@ Proof.
       fun st' => st' ∈ D.F d 𝔐' ⟨ s', S', X' ⟩ /\
               exists Δ : finset Σ, st' |= ⋀Δ.
 
-    have 𝔖'_fsat : f_sat 𝔖' Σ.
+    have 𝔖'_fsat : finite_satisfiable 𝔖' Σ.
     + move=>Δ.
       move: (sat_next_big_and' Δ)=>[st' [infw' satΔ]].
       exists st'.
@@ -400,12 +400,12 @@ Proof.
       * by exists Δ.
       * by apply sat_fold_forall.
 
-    have fw'_fsat : f_sat (D.F d 𝔐' ⟨ s', S', X' ⟩) Σ.
+    have fw'_fsat : finite_satisfiable (D.F d 𝔐' ⟨ s', S', X' ⟩) Σ.
     + move=>Δ.
       move: (𝔖'_fsat Δ)=>[st' [ [ ? ?] ?]].
       by exists st'.
 
-    have fw'_sat : sat (D.F d 𝔐' ⟨ s', S', X' ⟩) Σ
+    have fw'_sat : satisfiable (D.F d 𝔐' ⟨ s', S', X' ⟩) Σ
       by apply: M'_sat.
 
     case: fw'_sat=>st' [inS H].
@@ -464,7 +464,7 @@ Proof.
       fun st => st ∈ D.F d 𝔐 ⟨ s, S, X ⟩ /\
               exists Δ : finset Σ, st |= ⋀Δ.
 
-    have 𝔖_fsat : f_sat 𝔖 Σ.
+    have 𝔖_fsat : finite_satisfiable 𝔖 Σ.
     + move=>Δ.
       move: (sat_next_big_and Δ)=>[st [infw satΔ]].
       exists st.
@@ -473,12 +473,12 @@ Proof.
       * by exists Δ.
       * by apply sat_fold_forall.
 
-    have fw_fsat : f_sat (D.F d 𝔐 ⟨ s, S, X ⟩) Σ.
+    have fw_fsat : finite_satisfiable (D.F d 𝔐 ⟨ s, S, X ⟩) Σ.
     + move=>Δ.
       move: (𝔖_fsat Δ)=>[st [ [ ? ?] ?]].
       by exists st.
 
-    have fw_sat : sat (D.F d 𝔐 ⟨ s, S, X ⟩) Σ
+    have fw_sat : satisfiable (D.F d 𝔐 ⟨ s, S, X ⟩) Σ
       by apply: M_sat.
 
     case: fw_sat=>st [inS H].
@@ -536,14 +536,14 @@ Import RelationClasses.
 
 Definition rel_minus {W} (R: relation W) (w v: W) : relation W :=
   fun w' v'=>
-  (R w' v' -> w = w' -> v = v' -> False) \/ (w <> w' \/ v <> v' -> R w' v').
+  (w = w' /\ v = v' -> False) \/ (w <> w' \/ v <> v' -> R w' v').
 
 Definition F (d: Dyn) : muf :=
   match d with
   | Diamond => fun W '⟨w, R, V⟩ '⟨v, R', V'⟩=>
      R w v /\ R = R' /\ V = V'
   | Sb => fun W '⟨w, R, V⟩ '⟨v, R', V'⟩=>
-    R' = rel_minus R w v /\ V' = V
+     R w v /\ R' = rel_minus R w v /\ V' = V
   end.
 
 End SbDyn.
@@ -562,8 +562,19 @@ Axiom relation_extensionality : forall{W} {R R': relation W},
    (forall (v w: W), R v w <-> R' v w) -> R = R'. 
 
 (* WIP *)
-Lemma ffs W v S V w R S': (⟨v,S,V⟩ ∈ F Sb W ⟨w,R,V⟩) <-> (⟨v,S',V⟩ ∈ F Diamond W ⟨w,R,V⟩).
-
+Lemma ffs W v S V w R: (⟨v,S,V⟩ ∈ F Sb W ⟨w,R,V⟩) <-> (⟨v,S,V⟩ ∈ F Diamond W ⟨w,R,V⟩).
+Proof.
+  unfold Ensembles.In. simpl.
+  split.
+  - move=>[H1 [H2 H3]].
+    split_ands; try by [].
+    rewrite H2.
+    unfold rel_minus.
+    apply relation_extensionality.
+    move=>w' v'.
+    split.
+Abort.
+        
 Example valid_in_sb : forall (p:prop) pm, pm |= ⃟sb p ->' ⃟p.
 Proof.
   move=>p [ [W R] V] /= w [ [v R'] V'] /= [ [H1 H2] H3].
@@ -575,21 +586,8 @@ Proof.
   case: (classic (R w v)).
   - move=>Rwv.
     split_ands; try by [].
-    rewrite H1.
-    apply relation_extensionality.
-    move=> w' v'.
-    split.
-    + move=>Rw'v'.
-      admit. (* should be easy considering when w=w' and v=v' or not *)
-    + admit. (* should be easy considering when w=w' and v=v' or not *)
-  - move=>H.
- 
-case.
-    + move/(_ eq_refl eq_refl).
-      contradiction.
-    + move=>H.
-      split_ands; try by [].
-    
+Abort.
+   
 End Examples.
 
 (* Local Variables: *)
