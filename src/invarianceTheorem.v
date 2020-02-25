@@ -286,14 +286,14 @@ Definition satisfiable :=
   exists st : state_model 𝔐.(m_states),
     st ∈ 𝔖 /\ (forall φ : form, φ ∈ Σ -> st |= φ).
 
-Definition finite_satisfiable := forall Δ: finset Σ,
+Definition finitely_satisfiable := forall Δ: finset Σ,
   exists st : state_model 𝔐, st ∈ 𝔖 /\
   Forall (fun φ : form=> st |= φ) Δ.
 
 End Satisfability.
 
 Arguments satisfiable {_}.
-Arguments finite_satisfiable {_}.
+Arguments finitely_satisfiable {_}.
 
 Section Saturation.
 
@@ -313,7 +313,7 @@ Definition image := image_iden ∪ image_fw.
 Definition f_saturated d :=
   forall (Σ: set form) (st: state_model 𝔐),
     st ∈ image -> let 𝔖 := D.F d 𝔐 st in
-    finite_satisfiable 𝔖 Σ -> satisfiable 𝔖 Σ.
+    finitely_satisfiable 𝔖 Σ -> satisfiable 𝔖 Σ.
 
 Definition saturated := forall d, f_saturated d.
 
@@ -391,7 +391,7 @@ Proof.
       fun st' => st' ∈ D.F d 𝔐' ⟨ s', S', X' ⟩ /\
               exists Δ : finset Σ, st' |= ⋀Δ.
 
-    have 𝔖'_fsat : finite_satisfiable 𝔖' Σ.
+    have 𝔖'_fsat : finitely_satisfiable 𝔖' Σ.
     + move=>Δ.
       move: (sat_next_big_and' Δ)=>[st' [infw' satΔ]].
       exists st'.
@@ -400,7 +400,7 @@ Proof.
       * by exists Δ.
       * by apply sat_fold_forall.
 
-    have fw'_fsat : finite_satisfiable (D.F d 𝔐' ⟨ s', S', X' ⟩) Σ.
+    have fw'_fsat : finitely_satisfiable (D.F d 𝔐' ⟨ s', S', X' ⟩) Σ.
     + move=>Δ.
       move: (𝔖'_fsat Δ)=>[st' [ [ ? ?] ?]].
       by exists st'.
@@ -464,7 +464,7 @@ Proof.
       fun st => st ∈ D.F d 𝔐 ⟨ s, S, X ⟩ /\
               exists Δ : finset Σ, st |= ⋀Δ.
 
-    have 𝔖_fsat : finite_satisfiable 𝔖 Σ.
+    have 𝔖_fsat : finitely_satisfiable 𝔖 Σ.
     + move=>Δ.
       move: (sat_next_big_and Δ)=>[st [infw satΔ]].
       exists st.
@@ -473,7 +473,7 @@ Proof.
       * by exists Δ.
       * by apply sat_fold_forall.
 
-    have fw_fsat : finite_satisfiable (D.F d 𝔐 ⟨ s, S, X ⟩) Σ.
+    have fw_fsat : finitely_satisfiable (D.F d 𝔐 ⟨ s, S, X ⟩) Σ.
     + move=>Δ.
       move: (𝔖_fsat Δ)=>[st [ [ ? ?] ?]].
       by exists st.
@@ -557,36 +557,15 @@ Notation "⃟ φ" := (DynDiam Diamond φ)
 
 Notation "'⃟sb' φ" := (DynDiam Sb φ)
                      (at level 65, right associativity).
-
-Axiom relation_extensionality : forall{W} {R R': relation W},
-   (forall (v w: W), R v w <-> R' v w) -> R = R'. 
-
-(* WIP *)
-Lemma ffs W v S V w R: (⟨v,S,V⟩ ∈ F Sb W ⟨w,R,V⟩) <-> (⟨v,S,V⟩ ∈ F Diamond W ⟨w,R,V⟩).
-Proof.
-  unfold Ensembles.In. simpl.
-  split.
-  - move=>[H1 [H2 H3]].
-    split_ands; try by [].
-    rewrite H2.
-    unfold rel_minus.
-    apply relation_extensionality.
-    move=>w' v'.
-    split.
-Abort.
         
 Example valid_in_sb : forall (p:prop) pm, pm |= ⃟sb p ->' ⃟p.
 Proof.
-  move=>p [ [W R] V] /= w [ [v R'] V'] /= [ [H1 H2] H3].
-  exists ⟨v, R', V'⟩.
-  unfold Ensembles.In in *.
-  unfold rel_minus in H1.
-  simpl in *.
-  split; last by [].
-  case: (classic (R w v)).
-  - move=>Rwv.
-    split_ands; try by [].
-Abort.
+  move=>p [ [W R] V] /= w [ [v R'] V'] /=.
+  rewrite /Ensembles.In /=.
+  move => [ [ ? [ ? ?]] ?].
+  eexists ⟨v, _, V⟩.
+  by subst.
+Qed.
    
 End Examples.
 
