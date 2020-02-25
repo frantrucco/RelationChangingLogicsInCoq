@@ -112,11 +112,11 @@ Notation "⊥'" := Bottom.
 Notation "p ->' q" := (If p q)
                      (at level 90, right associativity).
 
-Notation "⃟ d ϕ" := (DynDiam d ϕ)
+Notation "⃟ d φ" := (DynDiam d φ)
                      (at level 65, d at level 9, right associativity).
 
 (* Syntactic sugar *)
-Definition Not (ϕ : form) : form := ϕ ->' ⊥'.
+Definition Not (φ : form) : form := φ ->' ⊥'.
 
 Notation "~' p" := (Not p)
                    (at level 70, right associativity).
@@ -125,47 +125,47 @@ Definition Top : form := ~'⊥'.
 
 Notation "⊤'" := Top.
 
-Definition And (ϕ ψ : form) : form := ~' (ϕ ->' ~'ψ).
+Definition And (φ ψ : form) : form := ~' (φ ->' ~'ψ).
 
 Notation "p /\' q" := (And p q)
                      (at level 80, right associativity).
 
-Definition Or (ϕ ψ : form) : form := ~'ϕ ->' ψ.
+Definition Or (φ ψ : form) : form := ~'φ ->' ψ.
 
 Notation "p \/' q" := (Or p q)
                      (at level 85, right associativity).
 
-Definition Iif (ϕ ψ : form) : form := (ϕ ->' ψ) /\' (ψ ->' ϕ).
+Definition Iif (φ ψ : form) : form := (φ ->' ψ) /\' (ψ ->' φ).
 
 Notation "p <->' q" := (Iif p q)
                      (at level 95, right associativity).
 
-Definition DynBox (d : D.Dyn) (ϕ : form) : form := ~'⃟ d ~'ϕ.
+Definition DynBox (d : D.Dyn) (φ : form) : form := ~'⃟ d ~'φ.
 
-Notation "⃞ d ϕ" := (DynBox d ϕ)
+Notation "⃞ d φ" := (DynBox d φ)
                      (at level 65, d at level 9, right associativity).
 
 
 (* Semantics *)
 
-Reserved Notation "p |= ϕ" (at level 30).
+Reserved Notation "p |= φ" (at level 30).
 
-Fixpoint satisfies (𝔐: pointed_model) (ϕ : form) : Prop :=
-  match ϕ with
+Fixpoint satisfies (𝔐: pointed_model) (φ : form) : Prop :=
+  match φ with
   | Atom a => (a, 𝔐.(pm_point)) ∈ 𝔐.(m_val)
   | Bottom => False
-  | ϕ1 ->' ϕ2 => (𝔐 |= ϕ1) -> (𝔐 |= ϕ2)
-  | ⃟ d ϕ =>
+  | φ1 ->' φ2 => (𝔐 |= φ1) -> (𝔐 |= φ2)
+  | ⃟ d φ =>
     let fw := D.F d 𝔐.(m_states) in
-    exists p', p' ∈ fw 𝔐  /\  p' |= ϕ
+    exists p', p' ∈ fw 𝔐  /\  p' |= φ
   end
-where "p |= ϕ" := (satisfies p ϕ).
+where "p |= φ" := (satisfies p φ).
 
-Theorem sat_classic : forall st ϕ, st |= ϕ \/ st |= ~' ϕ.
+Theorem sat_classic : forall st φ, st |= φ \/ st |= ~' φ.
 Proof. by move=>*; apply: classic. Qed.
 
 Definition equivalent (𝔐 𝔐': pointed_model) :=
-  forall (ϕ: form), (𝔐 |= ϕ) <-> (𝔐' |= ϕ).
+  forall (φ: form), (𝔐 |= φ) <-> (𝔐' |= φ).
 
 Notation "m ≡ m'" := (equivalent m m') (at level 0).
 
@@ -237,9 +237,9 @@ Theorem InvarianceUnderBisimulation :
   𝔐 ⇆ 𝔐' -> 𝔐 ≡ 𝔐'.
 
 Proof.
-  move=> 𝔐 𝔐' bis ϕ.
+  move=> 𝔐 𝔐' bis φ.
   move: 𝔐 𝔐' bis.
-  elim: ϕ => [prop | | ϕ IHϕ ψ IHψ | d ϕ IH] /=
+  elim: φ => [prop | | φ IHφ ψ IHψ | d φ IH] /=
              𝔐 𝔐'.
   + move=> [Z [bis HZ]].
     rewrite !to_st_val !to_st_point.
@@ -251,7 +251,7 @@ Proof.
     split; move=> HIf Hsat;
       apply (IHψ ?? bis);
       apply HIf;
-      by apply (IHϕ ?? bis).
+      by apply (IHφ ?? bis).
 
   + move=> [Z [bis HZ]].
     split.
@@ -280,15 +280,15 @@ Section Satisfability.
 Variable 𝔐 : model.
 Variable 𝔖 : set (state_model 𝔐.(m_states)).
 Variable Σ : set form.
-Variable ϕ : form.
+Variable φ : form.
 
 Definition satisfiable :=
   exists st : state_model 𝔐.(m_states),
-    st ∈ 𝔖 /\ (forall ϕ : form, ϕ ∈ Σ -> st |= ϕ).
+    st ∈ 𝔖 /\ (forall φ : form, φ ∈ Σ -> st |= φ).
 
 Definition finite_satisfiable := forall Δ: finset Σ,
   exists st : state_model 𝔐, st ∈ 𝔖 /\
-  Forall (fun ϕ : form=> st |= ϕ) Δ.
+  Forall (fun φ : form=> st |= φ) Δ.
 
 End Satisfability.
 
@@ -339,10 +339,10 @@ Definition big_and Δ := fold_right And Top Δ.
 Notation "'⋀' Δ" := (big_and Δ) (at level 0).
 
 Lemma sat_fold_forall m Δ:
-  Forall (fun ϕ : form => m |= ϕ) Δ <-> m |= ⋀Δ.
+  Forall (fun φ : form => m |= φ) Δ <-> m |= ⋀Δ.
 Proof.
   elim: Δ; first by simpl; tauto.
-  move=>ϕ Δ /= ->.
+  move=>φ Δ /= ->.
   tauto.
 Qed.
 
@@ -361,13 +361,13 @@ Proof.
 
   - move=>d [s S X] [t T Y] [s' S' X'] /=.
     move=>[imgS [imgS' SeqS']] tTYinsSX.
-    set Σ : set form := (fun ϕ=> ⟨ t , T , Y ⟩ |= ϕ).
+    set Σ : set form := (fun φ=> ⟨ t , T , Y ⟩ |= φ).
 
     have sat_big_and :
       forall Δ : finset Σ, ⟨t, T, Y⟩ |= ⋀Δ.
     + case.
-      elim=>/= [ |ϕ Δ IH]; first by [].
-      case=>Hϕ. move/IH=> HΔ.
+      elim=>/= [ |φ Δ IH]; first by [].
+      case=>Hφ. move/IH=> HΔ.
       by apply.
 
     have sat_diamond_big_and :
@@ -420,27 +420,27 @@ Proof.
       by exists ⟨ s', S', X' ⟩.
 
     split_ands; try by [].
-    move=>ϕ.
+    move=>φ.
     split.
     + move=>Ht.
       apply: H.
       by apply: Ht.
 
-    + case: (sat_classic  ⟨ t, T, Y ⟩ ϕ); first by [].
-      fold (Σ (~' ϕ)).
-      move/H => sat_notϕ sat_ϕ.
-      apply sat_notϕ in sat_ϕ.
+    + case: (sat_classic  ⟨ t, T, Y ⟩ φ); first by [].
+      fold (Σ (~' φ)).
+      move/H => sat_notφ sat_φ.
+      apply sat_notφ in sat_φ.
       contradiction.
 
   - move=>d [s S X] [t' T' Y'] [s' S' X'] /=.
     move=>[imgS [imgS' SeqS']] t'T'Y'insSX.
-    set Σ : set form := (fun ϕ=> ⟨ t' , T' , Y' ⟩ |= ϕ).
+    set Σ : set form := (fun φ=> ⟨ t' , T' , Y' ⟩ |= φ).
 
     have sat_big_and' :
       forall Δ : finset Σ, ⟨t', T', Y'⟩ |= ⋀Δ.
     + case.
-      elim=> /= [ |ϕ Δ IH]; first by [].
-      case=>Hϕ. move/IH=> HΔ.
+      elim=> /= [ |φ Δ IH]; first by [].
+      case=>Hφ. move/IH=> HΔ.
       by apply.
 
     have sat_diamond_big_and' :
@@ -493,12 +493,12 @@ Proof.
       by exists ⟨ s, S, X ⟩.
 
     split_ands; try by [].
-    move=>ϕ.
+    move=>φ.
     split.
-    + case: (sat_classic ⟨ t', T', Y' ⟩ ϕ); first by [].
-      fold (Σ (~' ϕ)).
-      move/H => sat_notϕ sat_ϕ.
-      apply sat_notϕ in sat_ϕ.
+    + case: (sat_classic ⟨ t', T', Y' ⟩ φ); first by [].
+      fold (Σ (~' φ)).
+      move/H => sat_notφ sat_φ.
+      apply sat_notφ in sat_φ.
       contradiction.
 
     + move=>Ht.
@@ -552,10 +552,10 @@ Module SbDynLogic := DynLogic SbDyn.
 Import SbDynLogic.
 Import SbDyn.
 
-Notation "⃟ ϕ" := (DynDiam Diamond ϕ)
+Notation "⃟ φ" := (DynDiam Diamond φ)
                      (at level 65, right associativity).
 
-Notation "'⃟sb' ϕ" := (DynDiam Sb ϕ)
+Notation "'⃟sb' φ" := (DynDiam Sb φ)
                      (at level 65, right associativity).
 
 Axiom relation_extensionality : forall{W} {R R': relation W},
