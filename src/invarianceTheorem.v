@@ -585,7 +585,7 @@ Definition F (d: Dyn) : muf :=
   match d with
   | Diamond => diamond
   | Poison => fun W '⟨w, R, V⟩ '⟨v, R', V'⟩=>
-     R w v /\ R' = R /\ V' = (V ∪ (Singleton _ (p∙, w)))
+     R w v /\ R' = R /\ V' = (V ∪ ⦃(p∙, w)⦄)
   end.
 
 End PoisonDyn.
@@ -613,17 +613,11 @@ Definition R : relation nat := fun n m=>
   ((n == 1) && (m == 2)) ||
   ((n == 2) && (m == 0)).
 
-Definition V : valuation nat := Singleton _ (p∙, 4).
-
+Definition V : valuation nat := ⦃(p∙, 4)⦄.
 Lemma curry : forall P Q R:Prop, (P /\ Q -> R) <-> (P -> Q -> R).
-Proof.
-  move=>P Q R.
-  split.
-  - tauto.
-  - tauto.
-Qed.
+Proof. move=>P Q R. split; tauto. Qed.
 
-Axiom notnot : forall P, (~ (~P)) = P.
+Axiom notnot : forall P, (~ (~P)) <-> P.
 
 Lemma sat_and st φ ψ: st |= (φ /\' ψ) <-> st|=φ /\ st|=ψ.
 Proof.
@@ -637,22 +631,29 @@ Proof.
     by apply.
 Qed.
 
+Axiom not_in_union : forall{A} (x:A) S R, ~(x ∈ R) -> ~(x ∈ S) -> ~(x ∈ (R∪S)).
+
 Example cycle : ⟨0, R, V⟩ |= ⬙ (delta 1).
 Proof.
-exists ⟨1, R, V ∪ (Singleton _ (p∙, 0))⟩.
+Let p0 := ⦃(p∙, 0)⦄.
+exists ⟨1, R, V ∪ p0⟩.
 split_ands; try by [].
-exists ⟨2, R, V ∪ (Singleton _ (p∙, 0))⟩.
+exists ⟨2, R, V ∪ p0⟩.
 split_ands; try by [].
 rewrite sat_and.
 split.
 - simpl.
   move=>H.
-  admit. (* true: p*, 2 is not in the valuation *)
-- exists ⟨0, R, V ∪ (Singleton _ (p∙, 0))⟩.
+  eapply not_in_union; last by eassumption.
+  + move=>H'.
+    by inversion H'.
+  + move=>H'.
+    by inversion H'.
+- exists ⟨0, R, V ∪ p0⟩.
 split_ands; try by [].
 apply Union_intror.
 by [].
-Admitted.
+Qed.
 
    
 End Examples.

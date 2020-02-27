@@ -7,9 +7,12 @@ Module Sets.
 Notation "'set' S" := (Ensemble S) (at level 0) : type_scope.
 
 Arguments Union {_}.
-Notation "a ∪ b" := (Union a b) (at level 85).
-
 Arguments Ensembles.In {_}.
+Arguments Singleton {_}.
+
+Notation "∅" := Empty_set.
+Notation "⦃ a ⦄" := (Singleton (a)).
+Notation "a ∪ b" := (Union a b) (at level 85).
 Notation "a ∈ b" := (Ensembles.In b a) (at level 60).
 
 Definition Forall {S} (s: S -> Prop) l := fold_right (fun a b=>s a /\ b) True l.
