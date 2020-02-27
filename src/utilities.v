@@ -9,6 +9,7 @@ Notation "'set' S" := (Ensemble S) (at level 0) : type_scope.
 Arguments Union {_}.
 Arguments Ensembles.In {_}.
 Arguments Singleton {_}.
+Arguments Empty_set {_}.
 
 Notation "∅" := Empty_set.
 Notation "⦃ a ⦄" := (Singleton (a)).
