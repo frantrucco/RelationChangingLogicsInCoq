@@ -113,8 +113,8 @@ Notation "⊥'" := Bottom.
 Notation "p ->' q" := (If p q)
                      (at level 90, right associativity).
 
-Notation "⃟ d φ" := (DynDiam d φ)
-                     (at level 65, d at level 9, right associativity).
+Notation "⃟ f φ" := (DynDiam f φ)
+                     (at level 65, f at level 9, right associativity).
 
 (* Syntactic sugar *)
 Definition Not (φ : form) : form := φ ->' ⊥'.
@@ -350,14 +350,13 @@ Qed.
 
 Lemma equiv_in_image_bisimulation : bisimulation equiv_in_image.
 Proof.
-  unfold equiv_in_image.
   split_ands.
-  - move=> s s' s_s' p.
-    case: s_s' =>[s_img [s'_img seqs']].
-    split; move=> ?.
-    + have sat : s |= p by assumption.
+  - move=> [s S X] [s' S' X'] equiv_ss' p.
+    case: equiv_ss' => [s_img [s'_img seqs']].
+    split; move=> /= ps_in_X.
+    + have sat : ⟨s, S, X⟩ |= p by assumption.
       by move/seqs': sat.
-    + have sat : s' |= p by assumption.
+    + have sat : ⟨s', S', X'⟩ |= p by assumption.
       by move/seqs': sat.
 
   - move=>f [s S X] [t T Y] [s' S' X'] /=.
@@ -402,22 +401,22 @@ Proof.
       * by apply sat_fold_forall.
 
     pose 𝔖'' := D.F f 𝔐' ⟨ s', S', X' ⟩.
-    have fw'_fsat : finitely_satisfiable 𝔖'' Σ.
+    have 𝔖''_fsat : finitely_satisfiable 𝔖'' Σ.
     + move=>Δ.
       move: (𝔖'_fsat Δ)=>[st' [ [ ? ?] ?]].
       by exists st'.
 
-    have fw'_sat : satisfiable 𝔖'' Σ
+    have 𝔖''_sat : satisfiable 𝔖'' Σ
       by apply: M'_sat.
 
-    case: fw'_sat=>st' [inS H].
-    exists st'.
+    case: 𝔖''_sat=>[ [t' T' Y'] [inS H] ].
+    exists ⟨ t', T', Y' ⟩.
     split; first by [].
     have tTY_img : ⟨ t, T, Y ⟩ ∈ image 𝔐.
     + apply: Union_intror. exists f.
       by exists ⟨ s, S, X ⟩.
 
-    have st'_img : st' ∈ image 𝔐'.
+    have t'T'Y'_img : ⟨ t', T', Y' ⟩ ∈ image 𝔐'.
     + apply: Union_intror. exists f.
       by exists ⟨ s', S', X' ⟩.
 
@@ -434,7 +433,7 @@ Proof.
       apply sat_notφ in sat_φ.
       contradiction.
 
-  - move=>d [s S X] [t' T' Y'] [s' S' X'] /=.
+  - move=>f [s S X] [t' T' Y'] [s' S' X'] /=.
     move=>[imgS [imgS' SeqS']] t'T'Y'insSX.
     set Σ : set form := (fun φ=> ⟨ t' , T' , Y' ⟩ |= φ).
 
@@ -446,24 +445,24 @@ Proof.
       by apply.
 
     have sat_diamond_big_and' :
-      forall Δ : finset Σ, ⟨s', S', X'⟩ |= ⃟ d ⋀Δ.
+      forall Δ : finset Σ, ⟨s', S', X'⟩ |= ⃟f ⋀Δ.
     + move=>Δ.
       exists ⟨t', T', Y'⟩.
       split; first by [].
       by apply: sat_big_and'.
 
     have sat_diamond_big_and :
-      forall Δ : finset Σ, ⟨s, S, X⟩ |= ⃟ d ⋀Δ
+      forall Δ : finset Σ, ⟨s, S, X⟩ |= ⃟f ⋀Δ
         by move=>Δ; apply/SeqS'.
 
     have sat_next_big_and :
-      forall Δ : finset Σ, exists st, st ∈ D.F d 𝔐 ⟨s, S, X⟩ /\ st |= ⋀Δ.
+      forall Δ : finset Σ, exists st, st ∈ D.F f 𝔐 ⟨s, S, X⟩ /\ st |= ⋀Δ.
     + move=>Δ.
       move: (sat_diamond_big_and Δ)=> /= [st [IH1 IH2]].
       by exists st.
 
     pose 𝔖 : set (state_model _) :=
-      fun st => st ∈ D.F d 𝔐 ⟨ s, S, X ⟩ /\
+      fun st => st ∈ D.F f 𝔐 ⟨ s, S, X ⟩ /\
               exists Δ : finset Σ, st |= ⋀Δ.
 
     have 𝔖_fsat : finitely_satisfiable 𝔖 Σ.
@@ -475,23 +474,23 @@ Proof.
       * by exists Δ.
       * by apply sat_fold_forall.
 
-    have fw_fsat : finitely_satisfiable (D.F d 𝔐 ⟨ s, S, X ⟩) Σ.
+    have fw_fsat : finitely_satisfiable (D.F f 𝔐 ⟨ s, S, X ⟩) Σ.
     + move=>Δ.
       move: (𝔖_fsat Δ)=>[st [ [ ? ?] ?]].
       by exists st.
 
-    have fw_sat : satisfiable (D.F d 𝔐 ⟨ s, S, X ⟩) Σ
+    have fw_sat : satisfiable (D.F f 𝔐 ⟨ s, S, X ⟩) Σ
       by apply: M_sat.
 
     case: fw_sat=>st [inS H].
     exists st.
     split; first by [].
     have t'T'Y'_img : ⟨ t', T', Y' ⟩ ∈ image 𝔐'.
-    + apply: Union_intror. exists d.
+    + apply: Union_intror. exists f.
       by exists ⟨ s', S', X' ⟩.
 
     have st_img : st ∈ image 𝔐.
-    + apply: Union_intror. exists d.
+    + apply: Union_intror. exists f.
       by exists ⟨ s, S, X ⟩.
 
     split_ands; try by [].
