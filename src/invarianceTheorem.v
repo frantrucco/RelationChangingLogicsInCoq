@@ -303,13 +303,13 @@ Variable 𝔐 : model.
 Definition image_iden : set (state_model 𝔐) :=
   fun st => st_rel st = m_rel 𝔐 /\ st_val st = m_val 𝔐.
 
-Definition image_fw_d d : set (state_model 𝔐) :=
-  fun st => exists st': state_model 𝔐, st ∈ D.F d 𝔐 st'.
+Definition image_fw f : set (state_model 𝔐) :=
+  fun st => exists st': state_model 𝔐, st ∈ D.F f 𝔐 st'.
 
-Definition image_fw : set (state_model 𝔐) :=
-  fun st => exists f, st ∈ image_fw_d f.
+Definition image_Ufw : set (state_model 𝔐) :=
+  fun st => exists f, st ∈ image_fw f.
 
-Definition image := image_iden ∪ image_fw.
+Definition image := image_iden ∪ image_Ufw.
 
 Definition f_saturated f :=
   forall (Σ: set form) (st: state_model 𝔐),
