@@ -617,7 +617,12 @@ Definition V : valuation nat := ⦃(p∙, 4)⦄.
 Lemma curry : forall P Q R:Prop, (P /\ Q -> R) <-> (P -> Q -> R).
 Proof. move=>P Q R. split; tauto. Qed.
 
-Axiom notnot : forall P, (~ (~P)) <-> P.
+Theorem notnot : forall P, (~ (~P)) <-> P.
+Proof.
+  move=>P.
+  split; last by tauto.
+  by case: (classic P). 
+Qed.
 
 Lemma sat_and st φ ψ: st |= (φ /\' ψ) <-> st|=φ /\ st|=ψ.
 Proof.
@@ -631,8 +636,6 @@ Proof.
     by apply.
 Qed.
 
-Axiom not_in_union : forall{A} (x:A) S R, ~(x ∈ R) -> ~(x ∈ S) -> ~(x ∈ (R∪S)).
-
 Example cycle : ⟨0, R, V⟩ |= ⬙ (delta 1).
 Proof.
 Let p0 := ⦃(p∙, 0)⦄.
@@ -644,11 +647,9 @@ rewrite sat_and.
 split.
 - simpl.
   move=>H.
-  eapply not_in_union; last by eassumption.
-  + move=>H'.
-    by inversion H'.
-  + move=>H'.
-    by inversion H'.
+  mrun (T.select (_ ∈ _) >>= inversion).
+  * mrun (T.select (_ ∈ V) >>= inversion).
+  * mrun (T.select (_ ∈ p0) >>= inversion).
 - exists ⟨0, R, V ∪ p0⟩.
 split_ands; try by [].
 apply Union_intror.
