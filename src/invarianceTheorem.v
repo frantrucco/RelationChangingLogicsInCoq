@@ -312,7 +312,7 @@ Definition image := image_iden ∪ image_fw.
 
 Definition f_saturated d :=
   forall (Σ: set form) (st: state_model 𝔐),
-    st ∈ image -> let 𝔖 := D.F d 𝔐 st in
+    st ∈ (image_iden ∪ image_fw_d d)  -> let 𝔖 := D.F d 𝔐 st in
     finitely_satisfiable 𝔖 Σ -> satisfiable 𝔖 Σ.
 
 Definition saturated := forall d, f_saturated d.
@@ -405,106 +405,106 @@ Proof.
       move: (𝔖'_fsat Δ)=>[st' [ [ ? ?] ?]].
       by exists st'.
 
-    have fw'_sat : satisfiable (D.F d 𝔐' ⟨ s', S', X' ⟩) Σ
-      by apply: M'_sat.
+    have fw'_sat : satisfiable (D.F d 𝔐' ⟨ s', S', X' ⟩) Σ.
+      apply: M'_sat; last by [].
 
-    case: fw'_sat=>st' [inS H].
-    exists st'.
-    split; first by [].
-    have tTY_img : ⟨ t, T, Y ⟩ ∈ image 𝔐.
-    + apply: Union_intror. exists d.
-      by exists ⟨ s, S, X ⟩.
+  (*   case: fw'_sat=>st' [inS H]. *)
+  (*   exists st'. *)
+  (*   split; first by []. *)
+  (*   have tTY_img : ⟨ t, T, Y ⟩ ∈ image 𝔐. *)
+  (*   + apply: Union_intror. exists d. *)
+  (*     by exists ⟨ s, S, X ⟩. *)
 
-    have st'_img : st' ∈ image 𝔐'.
-    + apply: Union_intror. exists d.
-      by exists ⟨ s', S', X' ⟩.
+  (*   have st'_img : st' ∈ image 𝔐'. *)
+  (*   + apply: Union_intror. exists d. *)
+  (*     by exists ⟨ s', S', X' ⟩. *)
 
-    split_ands; try by [].
-    move=>φ.
-    split.
-    + move=>Ht.
-      apply: H.
-      by apply: Ht.
+  (*   split_ands; try by []. *)
+  (*   move=>φ. *)
+  (*   split. *)
+  (*   + move=>Ht. *)
+  (*     apply: H. *)
+  (*     by apply: Ht. *)
 
-    + case: (sat_classic  ⟨ t, T, Y ⟩ φ); first by [].
-      fold (Σ (~' φ)).
-      move/H => sat_notφ sat_φ.
-      apply sat_notφ in sat_φ.
-      contradiction.
+  (*   + case: (sat_classic  ⟨ t, T, Y ⟩ φ); first by []. *)
+  (*     fold (Σ (~' φ)). *)
+  (*     move/H => sat_notφ sat_φ. *)
+  (*     apply sat_notφ in sat_φ. *)
+  (*     contradiction. *)
 
-  - move=>d [s S X] [t' T' Y'] [s' S' X'] /=.
-    move=>[imgS [imgS' SeqS']] t'T'Y'insSX.
-    set Σ : set form := (fun φ=> ⟨ t' , T' , Y' ⟩ |= φ).
+  (* - move=>d [s S X] [t' T' Y'] [s' S' X'] /=. *)
+  (*   move=>[imgS [imgS' SeqS']] t'T'Y'insSX. *)
+  (*   set Σ : set form := (fun φ=> ⟨ t' , T' , Y' ⟩ |= φ). *)
 
-    have sat_big_and' :
-      forall Δ : finset Σ, ⟨t', T', Y'⟩ |= ⋀Δ.
-    + case.
-      elim=> /= [ |φ Δ IH]; first by [].
-      case=>Hφ. move/IH=> HΔ.
-      by apply.
+  (*   have sat_big_and' : *)
+  (*     forall Δ : finset Σ, ⟨t', T', Y'⟩ |= ⋀Δ. *)
+  (*   + case. *)
+  (*     elim=> /= [ |φ Δ IH]; first by []. *)
+  (*     case=>Hφ. move/IH=> HΔ. *)
+  (*     by apply. *)
 
-    have sat_diamond_big_and' :
-      forall Δ : finset Σ, ⟨s', S', X'⟩ |= ⃟ d ⋀Δ.
-    + move=>Δ.
-      exists ⟨t', T', Y'⟩.
-      split; first by [].
-      by apply: sat_big_and'.
+  (*   have sat_diamond_big_and' : *)
+  (*     forall Δ : finset Σ, ⟨s', S', X'⟩ |= ⃟ d ⋀Δ. *)
+  (*   + move=>Δ. *)
+  (*     exists ⟨t', T', Y'⟩. *)
+  (*     split; first by []. *)
+  (*     by apply: sat_big_and'. *)
 
-    have sat_diamond_big_and :
-      forall Δ : finset Σ, ⟨s, S, X⟩ |= ⃟ d ⋀Δ
-        by move=>Δ; apply/SeqS'.
+  (*   have sat_diamond_big_and : *)
+  (*     forall Δ : finset Σ, ⟨s, S, X⟩ |= ⃟ d ⋀Δ *)
+  (*       by move=>Δ; apply/SeqS'. *)
 
-    have sat_next_big_and :
-      forall Δ : finset Σ, exists st, st ∈ D.F d 𝔐 ⟨s, S, X⟩ /\ st |= ⋀Δ.
-    + move=>Δ.
-      move: (sat_diamond_big_and Δ)=> /= [st [IH1 IH2]].
-      by exists st.
+  (*   have sat_next_big_and : *)
+  (*     forall Δ : finset Σ, exists st, st ∈ D.F d 𝔐 ⟨s, S, X⟩ /\ st |= ⋀Δ. *)
+  (*   + move=>Δ. *)
+  (*     move: (sat_diamond_big_and Δ)=> /= [st [IH1 IH2]]. *)
+  (*     by exists st. *)
 
-    pose 𝔖 : set (state_model _) :=
-      fun st => st ∈ D.F d 𝔐 ⟨ s, S, X ⟩ /\
-              exists Δ : finset Σ, st |= ⋀Δ.
+  (*   pose 𝔖 : set (state_model _) := *)
+  (*     fun st => st ∈ D.F d 𝔐 ⟨ s, S, X ⟩ /\ *)
+  (*             exists Δ : finset Σ, st |= ⋀Δ. *)
 
-    have 𝔖_fsat : finitely_satisfiable 𝔖 Σ.
-    + move=>Δ.
-      move: (sat_next_big_and Δ)=>[st [infw satΔ]].
-      exists st.
-      split_ands.
-      * by [].
-      * by exists Δ.
-      * by apply sat_fold_forall.
+  (*   have 𝔖_fsat : finitely_satisfiable 𝔖 Σ. *)
+  (*   + move=>Δ. *)
+  (*     move: (sat_next_big_and Δ)=>[st [infw satΔ]]. *)
+  (*     exists st. *)
+  (*     split_ands. *)
+  (*     * by []. *)
+  (*     * by exists Δ. *)
+  (*     * by apply sat_fold_forall. *)
 
-    have fw_fsat : finitely_satisfiable (D.F d 𝔐 ⟨ s, S, X ⟩) Σ.
-    + move=>Δ.
-      move: (𝔖_fsat Δ)=>[st [ [ ? ?] ?]].
-      by exists st.
+  (*   have fw_fsat : finitely_satisfiable (D.F d 𝔐 ⟨ s, S, X ⟩) Σ. *)
+  (*   + move=>Δ. *)
+  (*     move: (𝔖_fsat Δ)=>[st [ [ ? ?] ?]]. *)
+  (*     by exists st. *)
 
-    have fw_sat : satisfiable (D.F d 𝔐 ⟨ s, S, X ⟩) Σ
-      by apply: M_sat.
+  (*   have fw_sat : satisfiable (D.F d 𝔐 ⟨ s, S, X ⟩) Σ *)
+  (*     by apply: M_sat. *)
 
-    case: fw_sat=>st [inS H].
-    exists st.
-    split; first by [].
-    have t'T'Y'_img : ⟨ t', T', Y' ⟩ ∈ image 𝔐'.
-    + apply: Union_intror. exists d.
-      by exists ⟨ s', S', X' ⟩.
+  (*   case: fw_sat=>st [inS H]. *)
+  (*   exists st. *)
+  (*   split; first by []. *)
+  (*   have t'T'Y'_img : ⟨ t', T', Y' ⟩ ∈ image 𝔐'. *)
+  (*   + apply: Union_intror. exists d. *)
+  (*     by exists ⟨ s', S', X' ⟩. *)
 
-    have st_img : st ∈ image 𝔐.
-    + apply: Union_intror. exists d.
-      by exists ⟨ s, S, X ⟩.
+  (*   have st_img : st ∈ image 𝔐. *)
+  (*   + apply: Union_intror. exists d. *)
+  (*     by exists ⟨ s, S, X ⟩. *)
 
-    split_ands; try by [].
-    move=>φ.
-    split.
-    + case: (sat_classic ⟨ t', T', Y' ⟩ φ); first by [].
-      fold (Σ (~' φ)).
-      move/H => sat_notφ sat_φ.
-      apply sat_notφ in sat_φ.
-      contradiction.
+  (*   split_ands; try by []. *)
+  (*   move=>φ. *)
+  (*   split. *)
+  (*   + case: (sat_classic ⟨ t', T', Y' ⟩ φ); first by []. *)
+  (*     fold (Σ (~' φ)). *)
+  (*     move/H => sat_notφ sat_φ. *)
+  (*     apply sat_notφ in sat_φ. *)
+  (*     contradiction. *)
 
-    + move=>Ht.
-      apply: H.
-      by apply: Ht.
-Qed.
+  (*   + move=>Ht. *)
+  (*     apply: H. *)
+  (*     by apply: Ht. *)
+Admitted.
 
 Corollary HennesyMilner : 𝔐 ≡ 𝔐' -> 𝔐 ⇆ 𝔐'.
 Proof.
@@ -527,6 +527,10 @@ End DynLogic.
 
 Module Examples.
 
+Definition diamond : muf :=
+  fun W '⟨w, R, V⟩ '⟨v, R', V'⟩=>
+     R w v /\ R = R' /\ V = V'.
+
 Module SbDyn <: DYN.
 
 Inductive SbDyn := Diamond | Sb.
@@ -540,14 +544,14 @@ Definition rel_minus {W} (R: relation W) (w v: W) : relation W :=
 
 Definition F (d: Dyn) : muf :=
   match d with
-  | Diamond => fun W '⟨w, R, V⟩ '⟨v, R', V'⟩=>
-     R w v /\ R = R' /\ V = V'
+  | Diamond => diamond
   | Sb => fun W '⟨w, R, V⟩ '⟨v, R', V'⟩=>
      R w v /\ R' = rel_minus R w v /\ V' = V
   end.
 
 End SbDyn.
 
+Module SbExample.
 Module SbDynLogic := DynLogic SbDyn.
 Import SbDynLogic.
 Import SbDyn.
@@ -566,6 +570,90 @@ Proof.
   eexists ⟨v, _, V⟩.
   by subst.
 Qed.
+
+End SbExample.
+
+Module PoisonDyn <: DYN.
+
+Inductive PoisonDyn := Diamond | Poison.
+Definition Dyn := PoisonDyn.
+
+Variable poison_atom : prop.
+Notation "p∙" := poison_atom.
+
+Definition F (d: Dyn) : muf :=
+  match d with
+  | Diamond => diamond
+  | Poison => fun W '⟨w, R, V⟩ '⟨v, R', V'⟩=>
+     R w v /\ R' = R /\ V' = (V ∪ (Singleton _ (p∙, w)))
+  end.
+
+End PoisonDyn.
+
+Module PoisonDynLogic := DynLogic PoisonDyn.
+Import PoisonDynLogic.
+Import PoisonDyn.
+
+Notation "⃟ φ" := (DynDiam Diamond φ)
+                     (at level 65, right associativity).
+
+Notation "'⬙' φ" := (DynDiam Poison φ)
+                     (at level 65, right associativity).
+
+Fixpoint delta n : form :=
+  match n with
+  | 0 => ⃟p∙
+  | S n => ⃟(~'p∙ /\' delta n)
+  end.
+
+From mathcomp Require Import ssrnat ssrbool eqtype.
+
+Definition R : relation nat := fun n m=>
+  ((n == 0) && (m == 1)) ||
+  ((n == 1) && (m == 2)) ||
+  ((n == 2) && (m == 0)).
+
+Definition V : valuation nat := Singleton _ (p∙, 4).
+
+Lemma curry : forall P Q R:Prop, (P /\ Q -> R) <-> (P -> Q -> R).
+Proof.
+  move=>P Q R.
+  split.
+  - tauto.
+  - tauto.
+Qed.
+
+Axiom notnot : forall P, (~ (~P)) = P.
+
+Lemma sat_and st φ ψ: st |= (φ /\' ψ) <-> st|=φ /\ st|=ψ.
+Proof.
+  split.
+  - rewrite /= -curry.
+    fold (not (st |= φ /\ st |= ψ )).
+    fold (not (not (st |= φ /\ st |= ψ ))).
+    by rewrite notnot.
+  - move=>[Hφ Hψ].
+    simpl.
+    by apply.
+Qed.
+
+Example cycle : ⟨0, R, V⟩ |= ⬙ (delta 1).
+Proof.
+exists ⟨1, R, V ∪ (Singleton _ (p∙, 0))⟩.
+split_ands; try by [].
+exists ⟨2, R, V ∪ (Singleton _ (p∙, 0))⟩.
+split_ands; try by [].
+rewrite sat_and.
+split.
+- simpl.
+  move=>H.
+  admit. (* true: p*, 2 is not in the valuation *)
+- exists ⟨0, R, V ∪ (Singleton _ (p∙, 0))⟩.
+split_ands; try by [].
+apply Union_intror.
+by [].
+Admitted.
+
    
 End Examples.
 
