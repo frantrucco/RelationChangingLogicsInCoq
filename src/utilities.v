@@ -58,4 +58,14 @@ Polymorphic Definition fill {A B} (a : A) (b: B) {C} : M C :=
 
 Notation "a ?? b" := (ltac:(mrun (fill a b))) (at level 0).
 
+Definition apply2 : tactic := fun g=>
+  mmatch g with
+  | [? (P Q R : Prop) gg] Metavar S.Prop_sort ((P -> Q) -> P -> R) gg =>
+    e <- M.evar (Q -> R);
+    T.exact (fun (PtoQ:P->Q) (xP:P)=>e (PtoQ xP)) g;;
+    M.ret [m: (m: tt, Metavar' _ S.Prop_sort _ e)]
+  end.
+
+Tactic Notation "apply2" := (mrun apply2).
+
 End Tactics.

@@ -156,11 +156,11 @@ Fixpoint satisfies (𝔐: pointed_model) (φ : form) : Prop :=
   | Atom a => (a, 𝔐.(pm_point)) ∈ 𝔐.(m_val)
   | Bottom => False
   | φ1 ->' φ2 => (𝔐 |= φ1) -> (𝔐 |= φ2)
-  | ⃟ d φ =>
-    let fw := D.F d 𝔐.(m_states) in
+  | ⃟f φ =>
+    let fw := D.F f 𝔐.(m_states) in
     exists p', p' ∈ fw 𝔐  /\  p' |= φ
   end
-where "p |= φ" := (satisfies p φ).
+where "𝔐 |= φ" := (satisfies 𝔐 φ).
 
 Theorem sat_classic : forall st φ, st |= φ \/ st |= ~' φ.
 Proof. by move=>*; apply: classic. Qed.
@@ -240,7 +240,7 @@ Theorem InvarianceUnderBisimulation :
 Proof.
   move=> 𝔐 𝔐' bis φ.
   move: 𝔐 𝔐' bis.
-  elim: φ => [prop | | φ IHφ ψ IHψ | d φ IH] /=
+  elim: φ => [prop | | φ IHφ ψ IHψ | f φ IH] /=
              𝔐 𝔐'.
   + move=> [Z [bis HZ]].
     rewrite !to_st_val !to_st_point.
@@ -361,7 +361,7 @@ Proof.
 
   - move=>f [s S X] [t T Y] [s' S' X'] /=.
     move=>[imgS [imgS' SeqS']] tTYinsSX.
-    set Σ : set form := (fun φ=> ⟨ t , T , Y ⟩ |= φ).
+    pose Σ : set form := (fun φ=> ⟨ t , T , Y ⟩ |= φ).
 
     have sat_big_and :
       forall Δ : finset Σ, ⟨t, T, Y⟩ |= ⋀Δ.
@@ -429,13 +429,12 @@ Proof.
 
     + case: (sat_classic  ⟨ t, T, Y ⟩ φ); first by [].
       fold (Σ (~' φ)).
-      move/H => sat_notφ sat_φ.
-      apply sat_notφ in sat_φ.
+      move/H. mrun apply2. simpl.
       contradiction.
 
   - move=>f [s S X] [t' T' Y'] [s' S' X'] /=.
     move=>[imgS [imgS' SeqS']] t'T'Y'insSX.
-    set Σ : set form := (fun φ=> ⟨ t' , T' , Y' ⟩ |= φ).
+    pose Σ : set form := (fun φ=> ⟨ t' , T' , Y' ⟩ |= φ).
 
     have sat_big_and' :
       forall Δ : finset Σ, ⟨t', T', Y'⟩ |= ⋀Δ.
@@ -543,8 +542,8 @@ Definition rel_minus {W} (R: relation W) (w v: W) : relation W :=
   fun w' v'=>
   (w = w' /\ v = v' -> False) \/ (w <> w' \/ v <> v' -> R w' v').
 
-Definition F (d: Dyn) : muf :=
-  match d with
+Definition F (f: Dyn) : muf :=
+  match f with
   | Diamond => diamond
   | Sb => fun W '⟨w, R, V⟩ '⟨v, R', V'⟩=>
      R w v /\ R' = rel_minus R w v /\ V' = V
