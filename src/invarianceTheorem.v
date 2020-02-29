@@ -429,7 +429,7 @@ Proof.
 
     + case: (sat_classic  ⟨ t, T, Y ⟩ φ); first by [].
       fold (Σ (~' φ)).
-      move/H. mrun apply2. simpl.
+      move/H. apply2. simpl.
       contradiction.
 
   - move=>f [s S X] [t' T' Y'] [s' S' X'] /=.
@@ -495,10 +495,9 @@ Proof.
     split_ands; try by [].
     move=>φ.
     split.
-    + case: (sat_classic ⟨ t', T', Y' ⟩ φ); first by [].
+    + case: (sat_classic  ⟨ t', T', Y' ⟩ φ); first by [].
       fold (Σ (~' φ)).
-      move/H => sat_notφ sat_φ.
-      apply sat_notφ in sat_φ.
+      move/H. apply2. simpl.
       contradiction.
 
     + move=>Ht.
