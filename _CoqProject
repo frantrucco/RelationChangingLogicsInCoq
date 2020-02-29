@@ -1,3 +1,6 @@
 -R src RCLIC
+src/base.v
+src/models.v
 src/utilities.v
-src/invarianceTheorem.v
+src/logic.v
+src/examples.v
