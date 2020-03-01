@@ -1,8 +1,8 @@
--R src RCLIC
-src/base.v
-src/models.v
-src/utilities.v
-src/logic.v
-src/examples.v
-src/invariance.v
-src/hennessyMilner.v
+-R theories RCLIC
+theories/base.v
+theories/models.v
+theories/utilities.v
+theories/logic.v
+theories/examples.v
+theories/invariance.v
+theories/hennessyMilner.v
