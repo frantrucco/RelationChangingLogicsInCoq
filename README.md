@@ -57,3 +57,6 @@ In the `theories` directory you will find the following files:
 - `hennessyMilner.v`: the proof for the _Hennessy-Milner_ theorem,
   which states that, under certain conditions, two equivalent models
   are bisimilar.
+
+- `examples.v`: instantiations with specific logics, and proof of
+  logic-specific properties.
