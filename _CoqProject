@@ -4,3 +4,5 @@ src/models.v
 src/utilities.v
 src/logic.v
 src/examples.v
+src/invariance.v
+src/hennessyMilner.v
