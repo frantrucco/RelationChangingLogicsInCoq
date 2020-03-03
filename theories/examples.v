@@ -58,7 +58,7 @@ Definition F (d: Dyn) : muf :=
   match d with
   | Diamond => diamond
   | Poison => fun W '⟨w, R, V⟩ '⟨v, R', V'⟩=>
-     R w v /\ R' = R /\ V' = (V ∪ ⦃(p∙, w)⦄)
+     R w v /\ R' = R /\ V' = (V ∪ ⦃(p∙, v)⦄)
   end.
 
 End PoisonDyn.
@@ -74,8 +74,6 @@ Notation "'⬙' φ" := (DynDiam Poison φ)
                      (at level 65, right associativity).
 
 Let p (n:nat) := ⦃(p∙, n)⦄.
-
-Section WeirdExample.
 
 Fixpoint delta n : form :=
   match n with
@@ -113,11 +111,11 @@ Proof.
     by apply.
 Qed.
 
-Example cycle : ⟨0, R, V⟩ |= ⬙ (delta 1).
+Example cycle : ⟨0, R, V⟩ |= ⬙ (delta 2).
 Proof.
-exists ⟨1, R, V ∪ p 0⟩.
+exists ⟨1, R, V ∪ p 1⟩.
 split_ands; try by [].
-exists ⟨2, R, V ∪ p 0⟩.
+exists ⟨2, R, V ∪ p 1⟩.
 split_ands; try by [].
 rewrite sat_and.
 split.
@@ -125,14 +123,23 @@ split.
   move=>H.
   mrun (T.select (_ ∈ _) >>= inversion).
   * mrun (T.select (_ ∈ V) >>= inversion).
-  * mrun (T.select (_ ∈ p 0) >>= inversion).
-- exists ⟨0, R, V ∪ p 0⟩.
+  * mrun (T.select (_ ∈ p _) >>= inversion).
+- exists ⟨0, R, V ∪ p 1⟩.
 split_ands; try by [].
+rewrite sat_and.
+split.
+- simpl.
+  move=>H.
+  mrun (T.select (_ ∈ _) >>= inversion).
+  * mrun (T.select (_ ∈ V) >>= inversion).
+  * mrun (T.select (_ ∈ p _) >>= inversion).
+- exists ⟨1, R, V ∪ p 1⟩.
+split_ands; try by [].
+simpl.
 apply Union_intror.
 by [].
 Qed.
 
-End WeirdExample.
 
 Definition Rcycle := fun n m=>
   ((n == 0) && (m == 0)).
