@@ -77,17 +77,13 @@ Let p (n:nat) := ⦃(p∙, n)⦄.
 
 Fixpoint delta n : form :=
   match n with
-  | 0 => ⃟p∙
+  | 0 => ⊥'
+  | 1 => ⃟p∙
   | S n' => ⃟(~'p∙ /\' delta n')
   end.
 
 
-Definition R : relation nat := fun n m=>
-  ((n == 0) && (m == 1)) ||
-  ((n == 1) && (m == 2)) ||
-  ((n == 2) && (m == 0)).
-
-Definition V : valuation nat := ∅.
+Definition V0 : valuation nat := ∅.
 
 Lemma curry : forall P Q R:Prop, (P /\ Q -> R) <-> (P -> Q -> R).
 Proof. move=>P Q R. split; tauto. Qed.
@@ -111,33 +107,72 @@ Proof.
     by apply.
 Qed.
 
-Example cycle : ⟨0, R, V⟩ |= ⬙ (delta 2).
+Ltac cycle_one_step :=
+  split_ands; try by [];
+  rewrite sat_and;
+  split; first by (
+  simpl;
+  move=>?;
+  mrun (T.select (_ ∈ _) >>= inversion);
+  [mrun (T.select (_ ∈ V0) >>= inversion)
+  | mrun (T.select (_ ∈ p _) >>= inversion)]).
+
+Ltac cycle_end :=
+  split_ands; try by [];
+  simpl;
+  by apply Union_intror.
+
+
+Definition R_cycle2 : relation nat := fun n m=>
+  ((n == 0) && (m == 1)) ||
+  ((n == 1) && (m == 2)) ||
+  ((n == 2) && (m == 1)).
+
+Example cycle2 : ⟨0, R_cycle2, V0⟩ |= ⬙ (delta 2).
 Proof.
-exists ⟨1, R, V ∪ p 1⟩.
-split_ands; try by [].
-exists ⟨2, R, V ∪ p 1⟩.
-split_ands; try by [].
-rewrite sat_and.
-split.
-- simpl.
-  move=>H.
-  mrun (T.select (_ ∈ _) >>= inversion).
-  * mrun (T.select (_ ∈ V) >>= inversion).
-  * mrun (T.select (_ ∈ p _) >>= inversion).
-- exists ⟨0, R, V ∪ p 1⟩.
-split_ands; try by [].
-rewrite sat_and.
-split.
-- simpl.
-  move=>H.
-  mrun (T.select (_ ∈ _) >>= inversion).
-  * mrun (T.select (_ ∈ V) >>= inversion).
-  * mrun (T.select (_ ∈ p _) >>= inversion).
-- exists ⟨1, R, V ∪ p 1⟩.
-split_ands; try by [].
-simpl.
-apply Union_intror.
-by [].
+  pose R := R_cycle2.
+  pose V1 := V0 ∪ p 1.
+  exists ⟨1, R, V1⟩.
+  split_ands; try by [].
+  exists ⟨2, R, V1⟩.
+  cycle_one_step.
+  exists ⟨1, R, V1⟩.
+  cycle_end.
+Qed.
+
+
+Definition R_cycle1 : relation nat := fun n m=>
+  ((n == 0) && (m == 1)) ||
+  ((n == 1) && (m == 1)).
+
+Example cycle1 : ⟨0, R_cycle1, V0⟩ |= ⬙ (delta 1).
+Proof.
+  pose R := R_cycle1.
+  pose V1 := V0 ∪ p 1.
+  exists ⟨1, R, V1⟩.
+  split_ands; try by [].
+  exists ⟨1, R, V1⟩.
+  cycle_end.
+Qed.
+
+Definition R_cycle4 : relation nat := fun n m=>
+  ((n == 0) && (m == 1)) ||
+  ((n == 1) && (m == 2)) ||
+  ((n == 2) && (m == 2)) ||
+  ((n == 2) && (m == 1)).
+
+Example cycle4 : ⟨0, R_cycle4, V0⟩ |= ⬙ (delta 3).
+Proof.
+  pose R := R_cycle4.
+  pose V1 := V0 ∪ p 1.
+  exists ⟨1, R, V1⟩.
+  split_ands; try by [].
+  exists ⟨2, R, V1⟩.
+  cycle_one_step.
+  exists ⟨2, R, V1⟩.
+  cycle_one_step.
+  exists ⟨1, R, V1⟩.
+  cycle_end.
 Qed.
 
 
@@ -146,9 +181,6 @@ Definition Rcycle := fun n m=>
 
 Example cycle' : ⟨0, Rcycle, ∅⟩ |= ⬙ p∙.
 Proof.
-  exists ⟨0, Rcycle, V ∪ p 0⟩.
-  rewrite /Ensembles.In /=.
-  split_ands; try by [].
-  apply: Union_intror.
-  by [].
+  exists ⟨0, Rcycle, V0 ∪ p 0⟩.
+  cycle_end.
 Qed.
