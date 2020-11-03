@@ -21,9 +21,9 @@ Proof.
   + by [].
 
   + move=>bis.
-    split; move=> HIf Hsat;
+    split; move=> HImpl Hsat;
       apply (IHψ ?? bis);
-      apply HIf;
+      apply HImpl;
       by apply (IHφ ?? bis).
 
   + move=> [Z [bis HZ]].

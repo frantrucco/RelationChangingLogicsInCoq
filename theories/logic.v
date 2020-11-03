@@ -13,7 +13,7 @@ Module DynLogic (D: DYN).
 Inductive form : Set :=
   | Atom    : prop -> form
   | Bottom  : form
-  | If      : form -> form -> form
+  | Impl    : form -> form -> form
   | DynDiam : D.Dyn -> form -> form.
 
 Coercion Atom : prop >-> form.
@@ -21,7 +21,7 @@ Coercion Atom : prop >-> form.
 (* Basic notation *)
 Notation "⊥'" := Bottom.
 
-Notation "p ->' q" := (If p q)
+Notation "p ->' q" := (Impl p q)
                      (at level 90, right associativity).
 
 Notation "⃟ f φ" := (DynDiam f φ)
