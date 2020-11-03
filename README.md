@@ -17,7 +17,8 @@ best to use [Opam](http://opam.ocaml.org) and type in a terminal
 window:
 
 ```bash
-$ opam install coq-mathcomp-finset coq-mtac2
+$ opam repo add coq-released https://coq.inria.fr/opam/released 
+$ opam install coq-mathcomp-finmap coq-mtac2
 ```
 
 And then:
