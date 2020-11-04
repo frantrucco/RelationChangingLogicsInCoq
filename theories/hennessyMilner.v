@@ -9,12 +9,12 @@ Import DynLogic.
 Section Satisfability.
 
 Variable 𝔐 : model.
-Variable 𝔖 : set (state_model 𝔐.(m_states)).
+Variable 𝔖 : set (state_model 𝔐).
 Variable Σ : set form.
 Variable φ : form.
 
 Definition satisfiable :=
-  exists st : state_model 𝔐.(m_states),
+  exists st : state_model 𝔐,
     st ∈ 𝔖 /\ (forall φ : form, φ ∈ Σ -> st |= φ).
 
 Definition finitely_satisfiable := forall Δ: finset Σ,
