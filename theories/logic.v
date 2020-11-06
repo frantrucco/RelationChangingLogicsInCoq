@@ -2,8 +2,8 @@ Require Export models.
 
 (* General definitions *)
 Module Type DYN.
-Variable Dyn : Set.
-Variable F : Dyn -> muf.
+Context (Dyn : Set).
+Context (F : Dyn -> muf).
 End DYN.
 
 Module DynLogic (D: DYN).

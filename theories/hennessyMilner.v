@@ -8,10 +8,10 @@ Import DynLogic.
 
 Section Satisfability.
 
-Variable 𝔐 : model.
-Variable 𝔖 : set (state_model 𝔐).
-Variable Σ : set form.
-Variable φ : form.
+Context (𝔐 : model).
+Context (𝔖 : set (state_model 𝔐)).
+Context (Σ : set form).
+Context (φ : form).
 
 Definition satisfiable :=
   exists st : state_model 𝔐,
@@ -28,7 +28,7 @@ Arguments finitely_satisfiable {_}.
 
 Section Saturation.
 
-Variable 𝔐 : model.
+Context (𝔐 : model).
 
 Definition image_iden : set (state_model 𝔐) :=
   fun st => st_rel st = m_rel 𝔐 /\ st_val st = m_val 𝔐.
@@ -52,8 +52,8 @@ End Saturation.
 
 Section HennessyMilner.
 
-Variable 𝔐 : pointed_model.
-Variable 𝔐' : pointed_model.
+Context (𝔐 : pointed_model).
+Context (𝔐' : pointed_model).
 
 Hypothesis M_sat : saturated 𝔐.
 Hypothesis M'_sat : saturated 𝔐'.

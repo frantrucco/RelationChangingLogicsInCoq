@@ -51,7 +51,7 @@ Module PoisonDyn <: DYN.
 Inductive PoisonDyn := Diamond | Poison.
 Definition Dyn := PoisonDyn.
 
-Variable poison_atom : prop.
+Context (poison_atom : prop).
 Notation "p∙" := poison_atom.
 
 Definition F (d: Dyn) : muf :=
