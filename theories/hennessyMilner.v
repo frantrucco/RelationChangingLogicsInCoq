@@ -11,7 +11,6 @@ Section Satisfability.
 Context (𝔐 : model).
 Context (𝔖 : set (state_model 𝔐)).
 Context (Σ : set form).
-Context (φ : form).
 
 Definition satisfiable :=
   exists st : state_model 𝔐,
