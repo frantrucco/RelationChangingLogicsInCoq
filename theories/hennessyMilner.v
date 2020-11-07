@@ -52,11 +52,9 @@ End Saturation.
 
 Section HennessyMilner.
 
-Context (𝔐 : pointed_model).
-Context (𝔐' : pointed_model).
-
-Hypothesis M_sat : saturated 𝔐.
-Hypothesis M'_sat : saturated 𝔐'.
+Context {𝔐 𝔐' : pointed_model}.
+Context (M_sat : saturated 𝔐).
+Context (M'_sat : saturated 𝔐').
 
 Definition equiv_in_image st st' :=
     st ∈ image 𝔐 /\
