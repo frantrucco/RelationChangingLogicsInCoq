@@ -1,10 +1,79 @@
 Require Export models.
 
-(* General definitions *)
+(* When we give a mathematical definition of a concept sometimes we
+   parametrize this definition by a mathematical object. So for
+   instance, when we give the definition of what a formula is in a
+   dynamic logic we parametrize this definition by a set of dynamic
+   operators. Then, when we talk of a particular set of dynamic
+   formulas we specify the set of operators we are using and by doing
+   this we define a concrete set of formulas.
+
+   Certainly it would be highly inconvenient if a proof assistant
+   didn't have this particular form of abstraction. Imagine having to
+   repeat all the definitions that make a dynamic logic (e.g., the set
+   of formulas, the semantics, the notion of equivalent models, etc.)
+   separately for each concrete dynamic logic. This would be
+   innaceptable.
+
+   One elegant solution of this problem in Coq is to use modules,
+   module types and parameterized modules (aka functors).
+
+   Modules will allows us to wrap our mathematical definitions,
+   theorems and proofs and anything else that we could do in the
+   toplevel. Module types specify the general shape and type
+   properties of modules. A parameterized module is a module that
+   depends on a parameter. This parameter must also be module.
+
+   We now define the module type (or signature) DYN as consisting of:
+
+   - A dynamic set of operators Dyn with type Set and
+
+   - A function F with type (Dyn -> muf) that maps each dynamic
+   operator to its corresponding model update function.
+
+   By using this module type we can pack together these two concepts.
+
+   A module D of module type DYN would consist of:
+
+   - A concrete set of dynamic operators D.Dyn and
+
+   - A concrete mapping D.F between these dynamic operators and their
+   corresponding muf.
+
+   Notice how we used the dot operator to access the components of the
+   module D.
+
+   The reader can find examples of modules of type DYN in the file
+   examples.v.
+
+*)
+
 Module Type DYN.
 Context (Dyn : Set).
 Context (F : Dyn -> muf).
 End DYN.
+
+(* Here we define a parameterized module DynLogic that expects as a
+   parameter a module D of module type DYN. This means that inside
+   this module we can assume the existence of:
+
+   - A set of dynamic operators D.Dyn and
+
+   - A mapping D.F between these dynamic operators and their
+   corresponding muf.
+
+   This parameterization allows us to give all of the definitions that
+   depend on D.Dyn and on D.F without assuming a particular set of
+   dynamic operators. Moreover, we can later take this functor and
+   apply it to a module D of type DYN to obtain a module with all the
+   definitions of the concrete dynamic logic with the dynamic
+   operators defined in the parameter D.
+
+   The reader can find examples of modules that are the result of
+   applications of this functor (i.e., concrete dynamic logics) in
+   the file examples.v.
+
+*)
 
 Module DynLogic (D: DYN).
 
@@ -94,6 +163,7 @@ Definition equivalent (𝔐 𝔐': pointed_model) :=
 Notation "m ≡ m'" := (equivalent m m') (at level 0).
 
 (* Semantic Definitions *)
+
 Section Bisimulation.
 
 Context {W W' : Set}.
