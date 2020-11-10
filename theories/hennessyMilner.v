@@ -1,8 +1,32 @@
 Require Import logic.
 
+(* Here we define a parameterized module HennessyMilner that expects
+   as a parameter a module D of module type DYN. This parameterization
+   allows us to give a generic proof of the theorem HennesyMilner and
+   other auxiliary results and definitions.
+
+   We can later take this functor and apply it to a module D of type
+   DYN to obtain a module with a proof of the theorem for a concrete
+   set of dynamic operators.
+
+   The reader can find a more detailed explanation on modules in the
+   file logic.v.
+
+*)
+
 Module HennessyMilner (D: DYN).
 
+(* We use the functor DynLogic to define a dynamic logic with the
+   dynamic operators defined in D.
+
+*)
 Module DynLogic := DynLogic D.
+
+(* This Import command makes the components of the module DynLogic D
+   available by their short names. So for instance, we can write model
+   instead of DynLogic.model.
+
+*)
 Import DynLogic.
 
 
