@@ -30,7 +30,7 @@ Module DynLogic := DynLogic D.
 Import DynLogic.
 
 
-Section Satisfability.
+Section Satisfiability.
 
 Context (𝔐 : model).
 Context (𝔖 : set (state_model 𝔐)).
@@ -44,7 +44,7 @@ Definition finitely_satisfiable := forall Δ: finset Σ,
   exists st : state_model 𝔐, st ∈ 𝔖 /\
   Forall (fun φ : form=> st |= φ) Δ.
 
-End Satisfability.
+End Satisfiability.
 
 Arguments satisfiable {_}.
 Arguments finitely_satisfiable {_}.
