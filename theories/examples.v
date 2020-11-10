@@ -4,6 +4,29 @@ Definition diamond : muf :=
   fun W '⟨w, R, V⟩ '⟨v, R', V'⟩=>
      R w v /\ R = R' /\ V = V'.
 
+(* In this file we will define a number of examples of dynamic modal
+   logics with concrete sets of dynamic operators and their
+   corresponding model update functions.
+
+   To achieve this goal we need to define modules that satisfy the
+   signature given by the module type DYN. Once we have these modules
+   we can apply the functor DynLogic to each of them to obtain the
+   corresponding dynamic modal logics.
+
+   We could define our modules directly with the type DYN.
+   Unfortunately, this would restrict the interface. If the interface
+   is restricted we can no longer access any local definition in the
+   module that is not part of the module type.
+
+   The other option is to ignore the type and define our module
+   without any type. But we want to be sure that our implementation
+   satisfies the module type DYN!
+
+   Thankfully, Coq provides a way to do this by using a transparent
+   constraint:
+
+*)
+
 Module SbDyn <: DYN.
 
 Inductive SbDyn := Diamond | Sb.
@@ -34,7 +57,7 @@ Notation "⃟ φ" := (DynDiam Diamond φ)
 
 Notation "'⃟sb' φ" := (DynDiam Sb φ)
                      (at level 65, right associativity).
-        
+
 Example valid_in_sb : forall (p:prop) pm, pm |= ⃟sb p ->' ⃟p.
 Proof.
   move=>p [ [W R] V] /= w [ [v R'] V'] /=.
@@ -92,7 +115,7 @@ Theorem notnot : forall P, (~ (~P)) <-> P.
 Proof.
   move=>P.
   split; last by tauto.
-  by case: (classic P). 
+  by case: (classic P).
 Qed.
 
 Lemma sat_and st φ ψ: st |= (φ /\' ψ) <-> st|=φ /\ st|=ψ.
