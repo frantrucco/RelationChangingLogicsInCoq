@@ -46,13 +46,9 @@ Module UniExample.
   (* We can force the existence of infinite decreasing chains in the accessibility
      relation, using E.  *)
   Example decreasing_chains : 
-    forall pm : pointed_model, pm |= (Top ->' E ⃟ Top) <-> forall x, exists y, pm.(m_rel) y x.
+    forall W R, 
+    (forall V w, ⟪ W , R , V ⟫, w |= (Top ->' E ⃟ Top)) <-> forall x, exists y, R y x.
   Proof.
-    intro pm.
-    split.
-    - (* |= -> forall x, exists y *)
-      intros Hsat x.
-      unfold satisfies in Hsat.
-      simpl in Hsat.
-      Admitted.
+  Admitted.
+
 End UniExample.
