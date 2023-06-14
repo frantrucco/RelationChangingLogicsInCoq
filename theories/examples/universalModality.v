@@ -46,9 +46,10 @@ Module UniExample.
   (* We can force the existence of infinite decreasing chains in the accessibility
      relation, using E.  *)
   Example decreasing_chains : 
-    forall W R p, 
+    forall W R,
+      (exists p : prop,
       (* TODO: abstract frame validity into a definition *)
-    (forall V w, ⟪ W , R , V ⟫, w |= (p ->' E ⃟ p)) <-> forall x, exists y, R y x.
+        forall V w, ⟪ W , R , V ⟫, w |= (p ->' E ⃟ p)) <-> forall x, exists y, R y x.
   Proof.
   Admitted.
 
