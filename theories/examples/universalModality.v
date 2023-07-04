@@ -46,30 +46,27 @@ Module UniExample.
   (* We can force the existence of infinite chains in the accessibility
      relation, using E.  *)
   Example decreasing_chains : 
-    forall W R,
-      (exists p : prop,
+    forall W R (p : prop),
       (* TODO: abstract frame validity into a definition *)
-        forall V w,
+        (forall V w,
           ⟪ W , R , V ⟫, w |= (p ->' E ⃟ p)) <-> forall x, exists y, R y x.
   Proof.
-    intros W R.
+    intros W R p.
     split.
     - (* frame validity implies infinite chains *)
       intro Hframe_v.
-      inversion Hframe_v as [p Hframe_v'].
-      clear Hframe_v.
       intro v.
       (* valuation / v \in V (p) *)
-      specialize (Hframe_v' ⦃ (p, v) ⦄ v).
-      simpl in Hframe_v'.
+      specialize (Hframe_v ⦃ (p, v) ⦄ v).
+      simpl in Hframe_v.
       
       assert(Hv_in_Val: (p, v) ∈ ⦃ (p, v) ⦄).
       {apply (In_singleton _ (p, v)).
       }
       
-      specialize (Hframe_v' Hv_in_Val).
-      inversion Hframe_v' as [WRV [WRV_in [WR'V' [WR'V'_in Hp_holds]]]].
-      clear Hframe_v'.
+      specialize (Hframe_v Hv_in_Val).
+      inversion Hframe_v as [WRV [WRV_in [WR'V' [WR'V'_in Hp_holds]]]].
+      clear Hframe_v.
 
       destruct WRV as [w R' V].
       destruct WR'V' as [w' R'' V'].
@@ -104,7 +101,6 @@ Module UniExample.
       eauto.
     - (* infinite chains implies frame validity *)
       intro Hinf_chain.
-      exists (p 1).
       intros V w.
       simpl.
       intro Hin_V.
