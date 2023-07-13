@@ -1,6 +1,7 @@
 Require Import 
-  (* classic logic axioms *)
-  logic.
+  logic
+  (* basic modal logic *)
+  bml.
 
 (* Definition of a BML + universal modality as an instance of our generic notion
    of modal dynamic logic.
@@ -9,11 +10,11 @@ Require Import
 (* Diamond form of the universal modality, and diamond of the basic modal 
    language, as dynamic operators.  *)
 Module UniDyn <: DYN.
-  (* TODO: we need to redefine BML's diamond each time that we want to extend
+    (* TODO: we need to redefine BML's diamond each time that we want to extend
      BML with some new dynamic operator *)
-  Definition diamond : muf :=
-    fun W '⟨w, R, V⟩ '⟨v, R', V'⟩=>
-      R w v /\ R = R' /\ V = V'.
+  Module BmlDynLogic := DynLogic BmlDyn.
+  Import BmlDynLogic.
+  Import BmlDyn.
 
   Inductive UniDynOp := E | Diamond.
 

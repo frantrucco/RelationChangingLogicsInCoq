@@ -6,4 +6,7 @@ theories/logic.v
 theories/examples.v
 theories/invariance.v
 theories/hennessyMilner.v
+
 theories/examples/bml.v
+theories/examples/preImageModality.v
+theories/examples/universalModality.v
