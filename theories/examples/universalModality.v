@@ -43,6 +43,9 @@ Module UniExample.
   Notation "'E' φ" := (DynDiam E φ)
                         (at level 65, right associativity).
 
+  Notation "'A' φ" := (Not (E (Not φ)))
+                        (at level 65, right associativity).
+
   (* We can force the existence of infinite chains in the accessibility
      relation, using E.  *)
   Example decreasing_chains : 
