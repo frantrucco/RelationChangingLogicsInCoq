@@ -6,3 +6,4 @@ theories/logic.v
 theories/examples.v
 theories/invariance.v
 theories/hennessyMilner.v
+theories/examples/bml.v
